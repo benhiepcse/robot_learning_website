@@ -1312,7 +1312,13 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
         <div className="dash-brand"><div className="dash-r">R</div><div><b>RoboLearn</b><small>Learn · Build · Innovate</small></div></div>
         <nav className="dash-nav" aria-label="Điều hướng chính">
           {premiumDashboardNav.map(({ Icon, label }) => (
-            <button key={label} className={activeNav === label ? "active" : ""} onClick={() => setActiveNav(label)}>
+            <button
+              key={label}
+              className={activeNav === label ? "active" : ""}
+              onClick={() => setActiveNav(label)}
+              aria-label={label}
+              title={sidebarCollapsed ? label : undefined}
+            >
               <span><Icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>{label}
             </button>
           ))}

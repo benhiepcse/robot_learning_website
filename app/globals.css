@@ -616,3 +616,27 @@ code { font-family:var(--font-geist-mono); }
   .settings-hero h1{font-size:40px}
   .settings-card{padding:18px}
 }
+
+/* Subtle readability lift — preserve the original compact composition */
+.real-dashboard .dash-header h1{font-size:42px}
+.real-dashboard .dash-card h2,.real-dashboard .continue-card h2,.real-dashboard .quick-row h2{font-size:21px}
+
+.learning-header h1{font-size:42px}
+.learning-modules h2{font-size:21px}
+.learning-v2-card h3,.learning-v2-side h3{font-size:15px}
+.learning-v2 .learning-module-list h3{font-size:14px}
+.learning-v2 .learning-module-list p{font-size:12px}
+.learning-route-card>p,.learning-v2 .learning-overview-copy>p{font-size:12px}
+
+.roadmap-header h1{font-size:44px}
+.roadmap-intro h2,.roadmap-bottom h2{font-size:21px}
+.roadmap-phase>header h2{font-size:16px}
+.roadmap-stage h3{font-size:16px}
+.roadmap-stage p{font-size:13px}
+.roadmap-side-card h3{font-size:15px}
+
+@media(max-width:1550px){
+  .real-dashboard .dash-header h1{font-size:40px}
+  .learning-header h1{font-size:39px}
+  .roadmap-header h1{font-size:42px}
+}

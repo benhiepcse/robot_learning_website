@@ -33,6 +33,7 @@ import {
   Gamepad2,
   GraduationCap,
   History,
+  Hash,
   Image,
   Info,
   LayoutDashboard,
@@ -52,6 +53,7 @@ import {
   HandMetal,
   HardHat,
   MessageSquareText,
+  MessageCircle,
   Microchip,
   MonitorCog,
   Move3d,
@@ -69,6 +71,15 @@ import {
   Rocket,
   Star,
   Pin,
+  Paperclip,
+  Send,
+  Smile,
+  Reply,
+  Link2,
+  FileText,
+  X,
+  AtSign,
+  CheckSquare2,
   Archive,
   RotateCcw,
   Route,
@@ -791,6 +802,186 @@ function ProjectsWorkspace() {
   );
 }
 
+type CollaborationAttachment = { name: string; size: string; type: string; url?: string };
+type CollaborationMessage = {
+  id: string;
+  channel: string;
+  author: string;
+  text: string;
+  createdAt: string;
+  replyTo?: string;
+  pinned?: boolean;
+  reactions?: Record<string, string[]>;
+  attachments?: CollaborationAttachment[];
+  projectId?: string;
+};
+
+const collaborationChannels = [
+  { id: "general", label: "General", description: "Thông báo và trao đổi chung" },
+  { id: "ai-perception", label: "AI Perception", description: "Computer Vision, VLM, VLA và 3D Perception" },
+  { id: "control-simulation", label: "Control & Simulation", description: "Control, ROS2, MuJoCo và Isaac Sim" },
+  { id: "project-discussion", label: "Project Discussion", description: "Review tiến độ và phối hợp project" },
+  { id: "ideas", label: "Ideas & Research", description: "Ý tưởng, paper và thử nghiệm mới" },
+];
+
+const collaborationMembers = [
+  { username: "levonghiahiep", name: "Ben Hiệp", initials: "BH" },
+  { username: "phanthethong", name: "Thế Thông", initials: "TT" },
+];
+
+function CollaborationWorkspace({ username, displayName }: { username: string; displayName: string }) {
+  const [channel, setChannel] = useState("general");
+  const [messages, setMessages] = useState<CollaborationMessage[]>([]);
+  const [draft, setDraft] = useState("");
+  const [query, setQuery] = useState("");
+  const [replyTo, setReplyTo] = useState<CollaborationMessage | null>(null);
+  const [attachments, setAttachments] = useState<CollaborationAttachment[]>([]);
+  const [detailsOpen, setDetailsOpen] = useState(true);
+  const [showPins, setShowPins] = useState(false);
+  const [projects, setProjects] = useState<RoboProject[]>([]);
+  const [activeProject, setActiveProject] = useState("");
+
+  useEffect(() => {
+    const storedMessages = localStorage.getItem("robolearn-collaboration-messages");
+    const storedProjects = localStorage.getItem("robolearn-projects");
+    if (storedMessages) {
+      try { setMessages(JSON.parse(storedMessages)); } catch { /* keep empty history */ }
+    }
+    if (storedProjects) {
+      try { setProjects(JSON.parse(storedProjects)); } catch { /* keep empty projects */ }
+    }
+    const sync = (event: StorageEvent) => {
+      if (event.key === "robolearn-collaboration-messages" && event.newValue) {
+        try { setMessages(JSON.parse(event.newValue)); } catch { /* ignore invalid data */ }
+      }
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+
+  const persistMessages = (next: CollaborationMessage[]) => {
+    setMessages(next);
+    localStorage.setItem("robolearn-collaboration-messages", JSON.stringify(next));
+  };
+
+  const channelInfo = collaborationChannels.find((item) => item.id === channel) ?? collaborationChannels[0];
+  const channelMessages = messages
+    .filter((message) => message.channel === channel)
+    .filter((message) => !query || `${message.author} ${message.text} ${(message.attachments ?? []).map((file) => file.name).join(" ")}`.toLowerCase().includes(query.toLowerCase()));
+  const pinnedMessages = messages.filter((message) => message.channel === channel && message.pinned);
+  const currentProject = projects.find((project) => project.id === activeProject) ?? projects.find((project) => project.progress > 0 && project.progress < 100);
+  const otherMember = collaborationMembers.find((member) => member.username !== username) ?? collaborationMembers[1];
+
+  const submitMessage = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!draft.trim() && !attachments.length) return;
+    const next: CollaborationMessage = {
+      id: crypto.randomUUID(),
+      channel,
+      author: username,
+      text: draft.trim(),
+      createdAt: new Date().toISOString(),
+      replyTo: replyTo?.id,
+      attachments,
+      projectId: activeProject || undefined,
+      reactions: {},
+    };
+    persistMessages([...messages, next]);
+    setDraft("");
+    setAttachments([]);
+    setReplyTo(null);
+  };
+
+  const attachFiles = async (files?: FileList | null) => {
+    if (!files?.length) return;
+    const selected = Array.from(files).slice(0, 5);
+    const encoded = await Promise.all(selected.map((file) => new Promise<CollaborationAttachment>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ name: file.name, type: file.type || "file", size: file.size < 1024 * 1024 ? `${Math.ceil(file.size / 1024)} KB` : `${(file.size / 1024 / 1024).toFixed(1)} MB`, url: String(reader.result) });
+      reader.readAsDataURL(file);
+    })));
+    setAttachments((current) => [...current, ...encoded].slice(0, 5));
+  };
+
+  const updateMessage = (messageId: string, updater: (message: CollaborationMessage) => CollaborationMessage) => {
+    persistMessages(messages.map((message) => message.id === messageId ? updater(message) : message));
+  };
+
+  const react = (message: CollaborationMessage, emoji: string) => {
+    updateMessage(message.id, (item) => {
+      const reactions = { ...(item.reactions ?? {}) };
+      const users = reactions[emoji] ?? [];
+      reactions[emoji] = users.includes(username) ? users.filter((user) => user !== username) : [...users, username];
+      return { ...item, reactions };
+    });
+  };
+
+  const authorName = (author: string) => collaborationMembers.find((member) => member.username === author)?.name ?? author;
+  const initialsFor = (author: string) => collaborationMembers.find((member) => member.username === author)?.initials ?? author.slice(0, 2).toUpperCase();
+
+  return (
+    <div className={`collaboration-workspace ${detailsOpen ? "" : "details-collapsed"}`}>
+      <aside className="collab-rail">
+        <header><div><span>TEAM SPACE</span><h1>Collaboration</h1></div><button aria-label="Tạo kênh"><Plus size={17}/></button></header>
+        <section>
+          <div className="collab-section-title"><b>Kênh</b><small>{collaborationChannels.length}</small></div>
+          <nav>{collaborationChannels.map((item) => <button key={item.id} className={channel === item.id ? "active" : ""} onClick={() => { setChannel(item.id); setShowPins(false); }}><Hash size={16}/><span>{item.label}</span>{messages.some((message) => message.channel === item.id && message.author !== username) && <i/>}</button>)}</nav>
+        </section>
+        <section className="collab-direct">
+          <div className="collab-section-title"><b>Tin nhắn trực tiếp</b><small>2</small></div>
+          {collaborationMembers.map((member) => <button key={member.username}><span className="member-avatar">{member.initials}</span><p><b>{member.name}{member.username === username ? " (Bạn)" : ""}</b><small>Đang hoạt động</small></p><i/></button>)}
+        </section>
+        <div className="collab-sprint"><header><span>Current Sprint</span><b>{currentProject ? `${currentProject.progress}%` : "0%"}</b></header><i><b style={{ width: `${currentProject?.progress ?? 0}%` }}/></i><p>{currentProject?.title ?? "Chưa chọn project"}</p></div>
+      </aside>
+
+      <section className="collab-chat">
+        <header className="collab-chat-head">
+          <div><h2><Hash size={20}/>{channelInfo.label}</h2><p>{channelInfo.description}</p></div>
+          <div className="collab-head-actions"><label><Search size={16}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm trong hội thoại..." /></label><button className={showPins ? "active" : ""} onClick={() => setShowPins((value) => !value)} title="Tin đã ghim"><Pin size={17}/>{pinnedMessages.length > 0 && <span>{pinnedMessages.length}</span>}</button><button title="Thông báo"><Bell size={17}/></button><button onClick={() => setDetailsOpen((value) => !value)} title="Chi tiết kênh"><Info size={17}/></button></div>
+        </header>
+
+        {showPins && <div className="collab-pinned-panel"><header><b><Pin size={15}/> Tin nhắn đã ghim</b><button onClick={() => setShowPins(false)}><X size={15}/></button></header>{pinnedMessages.length ? pinnedMessages.map((message) => <button key={message.id} onClick={() => setShowPins(false)}><b>{authorName(message.author)}</b><span>{message.text || message.attachments?.[0]?.name}</span></button>) : <p>Chưa có tin nhắn được ghim.</p>}</div>}
+
+        <div className="collab-message-list">
+          {!channelMessages.length ? <div className="collab-welcome"><span><MessageCircle size={30}/></span><h2>Bắt đầu #{channelInfo.label}</h2><p>Trao đổi ý tưởng, gửi code, tài liệu và liên kết project với {otherMember.name}.</p><div><b>0</b> tin nhắn · <b>2</b> thành viên đang hoạt động</div></div> :
+          channelMessages.map((message) => {
+            const replied = messages.find((item) => item.id === message.replyTo);
+            const linkedProject = projects.find((project) => project.id === message.projectId);
+            return <article className="collab-message" key={message.id}>
+              <div className="message-avatar">{initialsFor(message.author)}</div>
+              <div className="message-content">
+                {replied && <button className="message-reply-context" onClick={() => setReplyTo(replied)}><Reply size={12}/><b>{authorName(replied.author)}</b><span>{replied.text.slice(0, 90)}</span></button>}
+                <header><b>{authorName(message.author)}</b>{message.author === username && <em>Bạn</em>}<time>{new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }).format(new Date(message.createdAt))}</time>{message.pinned && <Pin size={12}/>}</header>
+                {message.text && <p>{message.text}</p>}
+                {!!message.attachments?.length && <div className="message-files">{message.attachments.map((file, index) => <a href={file.url} download={file.name} key={`${file.name}-${index}`}><span>{file.type.startsWith("image") ? <Image size={18}/> : file.type.startsWith("video") ? <MessageSquareText size={18}/> : file.name.match(/\.(py|cpp|c|js|ts|tsx)$/i) ? <FileCode2 size={18}/> : <FileText size={18}/>}</span><p><b>{file.name}</b><small>{file.size}</small></p></a>)}</div>}
+                {linkedProject && <div className="message-project"><BriefcaseBusiness size={16}/><p><small>Linked Project</small><b>{linkedProject.title}</b></p><span>{linkedProject.progress}%</span></div>}
+                <div className="message-reactions">{Object.entries(message.reactions ?? {}).filter(([, users]) => users.length).map(([emoji, users]) => <button className={users.includes(username) ? "active" : ""} key={emoji} onClick={() => react(message, emoji)}>{emoji} {users.length}</button>)}</div>
+              </div>
+              <div className="message-hover-actions"><button onClick={() => react(message, "👍")} title="Thích">👍</button><button onClick={() => react(message, "🔥")} title="Tuyệt">🔥</button><button onClick={() => setReplyTo(message)} title="Phản hồi"><Reply size={15}/></button><button onClick={() => updateMessage(message.id, (item) => ({ ...item, pinned: !item.pinned }))} title="Ghim"><Pin size={15}/></button></div>
+            </article>;
+          })}
+        </div>
+
+        <form className="collab-composer" onSubmit={submitMessage}>
+          {replyTo && <div className="composer-reply"><Reply size={14}/><span>Đang trả lời <b>{authorName(replyTo.author)}</b>: {replyTo.text.slice(0, 80)}</span><button type="button" onClick={() => setReplyTo(null)}><X size={14}/></button></div>}
+          {!!attachments.length && <div className="composer-files">{attachments.map((file, index) => <span key={`${file.name}-${index}`}><FileText size={14}/>{file.name}<button type="button" onClick={() => setAttachments((items) => items.filter((_, itemIndex) => itemIndex !== index))}><X size={12}/></button></span>)}</div>}
+          {projects.length > 0 && <label className="composer-project"><BriefcaseBusiness size={14}/><select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}><option value="">Không gắn project</option>{projects.filter((project) => !project.archived).map((project) => <option value={project.id} key={project.id}>{project.title}</option>)}</select></label>}
+          <div><label className="attach-button"><Paperclip size={18}/><input type="file" multiple onChange={(event) => attachFiles(event.target.files)}/></label><textarea rows={1} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder={`Nhắn tin #${channelInfo.label}`} /><button type="button" title="Nhắc thành viên" onClick={() => setDraft((value) => `${value}@${otherMember.name} `)}><AtSign size={18}/></button><button type="button" title="Thả cảm xúc" onClick={() => setDraft((value) => `${value} 🤖`)}><Smile size={18}/></button><button className="send-button" type="submit" disabled={!draft.trim() && !attachments.length}><Send size={17}/></button></div>
+        </form>
+      </section>
+
+      {detailsOpen && <aside className="collab-details">
+        <header><h2>Chi tiết kênh</h2><button onClick={() => setDetailsOpen(false)}><X size={18}/></button></header>
+        <section className="channel-profile"><span><Hash size={22}/></span><h3>{channelInfo.label}</h3><p>{channelInfo.description}</p><small>Tạo bởi Ben Hiệp · Workspace riêng tư</small></section>
+        <section className="detail-links"><button><UsersRound size={17}/><span>Thành viên</span><b>2</b></button><button onClick={() => setShowPins(true)}><Pin size={17}/><span>Pinned messages</span><b>{pinnedMessages.length}</b></button><button><FileText size={17}/><span>File & media</span><b>{messages.filter((message) => message.channel === channel).reduce((sum, message) => sum + (message.attachments?.length ?? 0), 0)}</b></button><button><Link2 size={17}/><span>Links</span><b>{messages.filter((message) => message.channel === channel && /https?:\/\//.test(message.text)).length}</b></button></section>
+        <section className="detail-members"><h3>Thành viên — 2</h3>{collaborationMembers.map((member) => <div key={member.username}><span className="member-avatar">{member.initials}</span><p><b>{member.name}</b><small><i/> Online {member.username === username ? "· Bạn" : ""}</small></p>{member.username === "levonghiahiep" && <em>Owner</em>}</div>)}</section>
+        <section className="active-work"><h3><CheckSquare2 size={17}/> Active Work</h3>{currentProject ? <><b>{currentProject.title}</b><p>{currentProject.description || "Project Robotics đang thực hiện."}</p><div><i><b style={{ width: `${currentProject.progress}%` }}/></i><span>{currentProject.progress}%</span></div><small>{currentProject.taskCount ?? 0} tasks · {currentProject.technologies.slice(0, 2).join(" · ")}</small></> : <div className="detail-empty">Project đang thực hiện sẽ xuất hiện tại đây.</div>}</section>
+        <section className="collab-activity"><h3>Hoạt động mới</h3><p><Activity size={15}/> {messages.length ? `${messages.length} tin nhắn trong workspace` : "Chưa có hoạt động mới"}</p><p><UsersRound size={15}/> 2 thành viên trực tuyến</p></section>
+      </aside>}
+    </div>
+  );
+}
+
 type RoboLearnSettings = {
   language: "vi" | "en";
   fontSize: number;
@@ -1117,6 +1308,8 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
           <RoadmapWorkspace initialTrack={roadmapTrack} />
         ) : activeNav === "Projects" ? (
           <ProjectsWorkspace />
+        ) : activeNav === "Collaboration" ? (
+          <CollaborationWorkspace username={username} displayName={displayName} />
         ) : activeNav === "Settings" ? (
           <SettingsWorkspace displayName={displayName} username={username} theme={theme} onThemeChange={setTheme} />
         ) : activeNav !== "Dashboard" ? (

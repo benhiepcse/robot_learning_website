@@ -8,6 +8,7 @@ import {
   CircleGauge,
   CheckCircle2,
   Activity,
+  Anchor,
   Bot,
   Box,
   Boxes,
@@ -17,8 +18,10 @@ import {
   Code2,
   Cog,
   Combine,
+  Compass,
   Cpu,
   Eye,
+  FlaskConical,
   Footprints,
   Gamepad2,
   History,
@@ -33,6 +36,7 @@ import {
   Gauge,
   GitBranch,
   Hand,
+  HandMetal,
   HardHat,
   MessageSquareText,
   Microchip,
@@ -43,6 +47,7 @@ import {
   Orbit,
   PersonStanding,
   Radar,
+  Repeat2,
   RadioTower,
   Ruler,
   Rocket,
@@ -56,6 +61,7 @@ import {
   Target,
   Settings,
   Tags,
+  TestTube2,
   UsersRound,
   Waves,
   Waypoints,
@@ -306,37 +312,50 @@ const perceptionRoadmap = [
 ];
 
 const controlRoadmap = [
-  { phase: "Phase 1 · Engineering Foundations", caption: "Lập trình, cơ học và mô hình chuyển động robot", stages: [
+  { phase: "Phase 1 · Foundations & Robot Mechanics", caption: "Nền tảng lập trình, toán học, cơ học và mô hình robot", stages: [
     ["Programming & Development Tools", "Linux, Python, C++, Modern C++"],
+    ["Mathematical Foundations", "Linear algebra, calculus, differential equations, probability, SO(3), SE(3)"],
     ["Classical Mechanics", "Newton laws, forces, torque, work, energy, momentum, conservation"],
     ["Rigid Body Dynamics", "Rigid motion, inertia tensor, COM, COP, quaternion, transformations"],
     ["Robot Kinematics", "DOF, frames, DH, FK, IK, Jacobians, singularities, redundancy"],
     ["Robot Dynamics", "Newton-Euler, Lagrange, RNEA, CRBA, ABA, forward & inverse dynamics"],
+    ["Contact & Floating-Base Dynamics", "Contacts, friction cones, constrained and centroidal dynamics, impacts"],
+    ["Numerical Methods & Optimization", "Integration, differentiation, convex optimization, QP and sparse solvers"],
   ]},
-  { phase: "Phase 2 · Control Systems", caption: "Từ feedback cổ điển đến điều khiển phi tuyến hiện đại", stages: [
+  { phase: "Phase 2 · Control & State Estimation", caption: "Điều khiển từ cổ điển đến hiện đại và ước lượng trạng thái robot", stages: [
     ["Control Theory Fundamentals", "Open/closed loop, stability, transfer functions, Laplace, Bode, Nyquist"],
     ["Classical Controllers", "P, PI, PD, PID, cascade PID, gain scheduling, anti-windup"],
     ["State Space Control", "Controllability, observability, pole placement, observers, Kalman filters"],
     ["Modern Control", "LQR, LQG, MPC, optimal, robust, adaptive, H∞ and μ-synthesis"],
     ["Nonlinear Control", "Feedback linearization, computed torque, sliding mode, backstepping, NMPC"],
+    ["State Estimation & Sensor Fusion", "Bayesian estimation, EKF, UKF, particle filters, base pose and contact estimation"],
   ]},
-  { phase: "Phase 3 · Humanoid Motion & Control", caption: "Điều khiển lực, toàn thân, locomotion và sinh chuyển động", stages: [
+  { phase: "Phase 3 · Whole-Body Motion & Interaction", caption: "Điều khiển lực, chuyển động toàn thân, locomotion và thao tác", stages: [
     ["Force Control", "Position, velocity, torque, impedance, admittance and hybrid force control"],
     ["Whole Body Control", "Operational space, task priority, null-space, contact optimization, hierarchical QP"],
-    ["Humanoid Locomotion", "Gait, footsteps, balance, ZMP, capture point, DCM and preview control"],
+    ["Motion Planning", "Configuration space, A*, RRT, PRM, trajectory optimization and contact planning"],
     ["Motion Generation", "Trajectories, cubic/quintic polynomials, minimum jerk, Bézier, splines, time scaling"],
+    ["Humanoid Locomotion", "Gait, footsteps, balance, ZMP, capture point, DCM and preview control"],
+    ["Manipulation & Grasping", "Grasp planning, force closure, bimanual and dexterous manipulation, visual servoing"],
   ]},
-  { phase: "Phase 4 · Hardware & Embedded Robotics", caption: "Động cơ, firmware thời gian thực và hệ thống cảm biến", stages: [
+  { phase: "Phase 4 · Hardware, Real-Time & Identification", caption: "Cơ cấu chấp hành, hệ nhúng thời gian thực, cảm biến và nhận dạng hệ thống", stages: [
     ["Motor Control", "DC, BLDC, PMSM, servo, FOC, SVPWM, encoders, current sensing and drivers"],
-    ["Embedded Systems", "C/C++, STM32, FreeRTOS, interrupts, DMA, timers and industrial communication"],
-    ["Sensors", "Encoders, IMU, force/torque, load cells, pressure, cameras and LiDAR"],
+    ["Embedded & Real-Time Systems", "STM32, FreeRTOS, PREEMPT_RT, interrupts, DMA, latency, jitter and communication"],
+    ["Sensors & Calibration", "Encoders, IMU, force/torque, pressure, cameras, LiDAR and sensor calibration"],
+    ["System Identification", "Motor, friction, inertia and actuator identification; dynamic model validation"],
   ]},
-  { phase: "Phase 5 · Simulation, ROS 2 & Deployment", caption: "Mô hình hóa, mô phỏng, tích hợp và triển khai robot an toàn", stages: [
+  { phase: "Phase 5 · Modeling, Simulation & ROS 2", caption: "Mô hình hóa robot, mô phỏng vật lý và tích hợp middleware", stages: [
+    ["Robot Modeling", "URDF, SDF, MJCF, CAD integration, mass properties, collision and visual models"],
     ["Simulation", "MATLAB, Simulink, MuJoCo, Gazebo, Isaac Sim/Gym/Lab, Drake, Pinocchio, Webots"],
     ["ROS 2", "ros2_control, controller manager, hardware interfaces, TF2, URDF, Xacro, MoveIt2, RViz2"],
-    ["Robot Modeling", "URDF, SDF, MJCF, CAD integration, mass properties, collision and visual models"],
-    ["Numerical Methods", "Euler, Runge-Kutta, differentiation, optimization and sparse linear solvers"],
+  ]},
+  { phase: "Phase 6 · Learning-Based Control & Transfer", caption: "Học chính sách điều khiển và chuyển từ mô phỏng sang robot thật", stages: [
+    ["Reinforcement Learning", "MDP, PPO, SAC, imitation, offline, model-based and safe reinforcement learning"],
+    ["Sim-to-Real", "Domain randomization, dynamics adaptation, latency modeling, HIL and reality-gap evaluation"],
+  ]},
+  { phase: "Phase 7 · Safety, Verification & Engineering", caption: "Xác minh, triển khai và vận hành hệ thống humanoid đáng tin cậy", stages: [
     ["Safety & Reliability", "Joint/torque limits, collision and fault detection, E-stop, thermal protection"],
+    ["Verification & Deployment", "SIL, PIL, HIL, benchmarking, regression tests, telemetry and fault injection"],
     ["Software Engineering", "Linux, Git, CMake, testing, profiling, debugging, real-time and multithreading"],
   ]},
 ];
@@ -348,11 +367,13 @@ const perceptionModuleIcons = [
 ];
 
 const controlModuleIcons = [
-  FileCode2, Scale, Orbit, Waypoints, Cog,
-  Network, SlidersHorizontal, Move3d, BrainCircuit, Waves,
-  Hand, PersonStanding, Footprints, Route,
-  Gauge, Microchip, Radar,
-  MonitorCog, Workflow, Ruler, Calculator, ShieldCheck, GitBranch,
+  FileCode2, Sigma, Scale, Orbit, Waypoints, Cog, Anchor, Calculator,
+  Network, SlidersHorizontal, Move3d, BrainCircuit, Waves, Radar,
+  Hand, PersonStanding, Compass, Route, Footprints, HandMetal,
+  Gauge, Microchip, Activity, FlaskConical,
+  Ruler, MonitorCog, Workflow,
+  Bot, Repeat2,
+  ShieldCheck, TestTube2, GitBranch,
 ];
 
 function getModuleIcon(track: "perception" | "control", index: number) {

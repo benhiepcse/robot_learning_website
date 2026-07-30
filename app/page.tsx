@@ -1104,8 +1104,13 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
               </section>
 
               <section className="quick-row real-quick"><h2>Truy cập nhanh</h2><div>
-                {[["▣","Learning"],["◇","Projects"],["▧","Knowledge Vault"],["⌘","Roadmap"]].map((item) =>
-                  <button key={item[1]} onClick={() => setActiveNav(item[1])}><span>{item[0]}</span>{item[1]}</button>
+                {[
+                  { label: "Learning", icon: BookOpen },
+                  { label: "Projects", icon: BriefcaseBusiness },
+                  { label: "Knowledge Vault", icon: Library },
+                  { label: "Roadmap", icon: Map },
+                ].map(({ label, icon: QuickIcon }) =>
+                  <button key={label} onClick={() => setActiveNav(label)}><span><QuickIcon size={19}/></span>{label}</button>
                 )}
               </div></section>
             </div>

@@ -1319,7 +1319,8 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
               aria-label={label}
               title={sidebarCollapsed ? label : undefined}
             >
-              <span><Icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>{label}
+              <span><Icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>
+              <span className="dash-nav-label">{label}</span>
             </button>
           ))}
         </nav>

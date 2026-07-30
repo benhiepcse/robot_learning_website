@@ -468,7 +468,7 @@ function lessonWorkspaceName(kind: LessonKind) {
 
 function cvLesson(title: string, kind: LessonKind, concepts: string[], example: string, source: string, duration = 24): CourseLesson {
   return {
-    title, kind, concepts, example, source, duration, xp: Math.max(20, Math.round(duration * 1.5)),
+    title, kind: kind === "Quiz" ? "Quiz" : "Coding", concepts, example, source, duration, xp: Math.max(20, Math.round(duration * 1.5)),
     summary: `${title} là một mắt xích trong pipeline thị giác của humanoid: dữ liệu camera phải được biểu diễn đúng, xử lý có kiểm soát và tạo ra tín hiệu đủ tin cậy cho nhận thức hoặc điều khiển.`,
     objectives: [
       `Giải thích được ${concepts[0].toLowerCase()} và vai trò của nó trong computer vision.`,
@@ -578,6 +578,76 @@ const computerVisionFundamentalsCurriculum: CourseChapter[] = [
     ],
   },
 ];
+
+function getCvTheory(lesson: CourseLesson) {
+  const text = `${lesson.title} ${lesson.concepts.join(" ")}`.toLowerCase();
+  if (/convolution|kernel|gaussian|median|bilateral|lọc ảnh/.test(text)) return {
+    definition: "Lọc ảnh tạo một giá trị đầu ra mới cho mỗi pixel bằng cách xét một lân cận quanh pixel đó. Với lọc tuyến tính, phép toán được biểu diễn bằng convolution: kernel trượt trên ảnh, nhân từng hệ số với pixel tương ứng rồi cộng lại. Kernel vì thế mô tả loại thông tin cần giữ hoặc loại bỏ.",
+    mechanism: "Với ảnh I và kernel K, đầu ra tại (x,y) là G(x,y)=ΣᵢΣⱼ K(i,j)I(x-i,y-j). Kernel Gaussian làm suy giảm thành phần tần số cao và giảm nhiễu; median lấy trung vị nên bền với nhiễu xung; bilateral kết hợp khoảng cách không gian với chênh lệch cường độ để làm mượt nhưng vẫn giữ biên.",
+    limits: "Kernel lớn giảm nhiễu mạnh hơn nhưng làm mất chi tiết và tăng độ trễ. Trên humanoid phải lựa chọn kích thước kernel theo độ phân giải, tốc độ camera và loại nhiễu; không dùng một cấu hình duy nhất cho mọi điều kiện sáng.",
+    formula: "G(x,y) = Σᵢ Σⱼ K(i,j) · I(x-i, y-j)",
+  };
+  if (/histogram|contrast|clahe|threshold|cường độ|grayscale|color|màu|white balance/.test(text)) return {
+    definition: "Giá trị pixel không tự mang ý nghĩa vật lý tuyệt đối: nó phụ thuộc phổ ánh sáng, đáp ứng cảm biến, exposure và phép mã hóa màu. Biến đổi điểm xử lý từng pixel độc lập để đưa tín hiệu về miền thuận lợi hơn cho thuật toán phía sau.",
+    mechanism: "Histogram đếm số pixel ở mỗi mức cường độ. Contrast stretching ánh xạ khoảng [Imin,Imax] về toàn dải; histogram equalization dùng hàm phân phối tích lũy; CLAHE thực hiện cân bằng trên các ô nhỏ và giới hạn độ khuếch đại để tránh phóng đại nhiễu. HSV/Lab tách độ sáng khỏi thành phần màu tốt hơn RGB trong nhiều bài toán.",
+    limits: "Tăng tương phản không tạo ra thông tin đã mất do clipping. Threshold cố định dễ hỏng khi illumination thay đổi; adaptive threshold ổn định hơn nhưng nhạy với kích thước cửa sổ. Cần kiểm thử trên ánh sáng ban ngày, đèn trong nhà và vùng bóng.",
+    formula: "I′ = (I - Imin) / (Imax - Imin)",
+  };
+  if (/sampling|aliasing|pixel|resolution|bit depth|dynamic range|dtype|shape|memory/.test(text)) return {
+    definition: "Ảnh số là phép lấy mẫu không gian và lượng tử hóa tín hiệu ánh sáng. Resolution quy định số vị trí lấy mẫu; bit depth quy định số mức có thể biểu diễn; dtype và memory layout quyết định cách các giá trị được lưu và truyền giữa camera, CPU, GPU.",
+    mechanism: "Nếu chi tiết trong cảnh biến thiên nhanh hơn một nửa tần số lấy mẫu, các mẫu không còn phân biệt đúng cấu trúc và tạo aliasing. Bộ lọc anti-aliasing làm suy giảm thành phần tần số cao trước khi resize. Ảnh 8-bit có 256 mức, trong khi 16-bit giữ được nhiều dải động hơn nhưng tăng bộ nhớ và bandwidth.",
+    limits: "Tăng resolution không tự động tăng chất lượng nếu quang học mờ hoặc sensor nhiễu. Chuyển uint8 sang float mà quên chuẩn hóa có thể làm mô hình nhận sai miền giá trị; đổi RGB/BGR hoặc HWC/CHW sai tạo kết quả hợp lệ về shape nhưng sai về nghĩa.",
+    formula: "Dung lượng ≈ width × height × channels × bytes_per_value",
+  };
+  if (/pinhole|projection|field of view|méo|distortion|quang học|ánh sáng|cảm biến/.test(text)) return {
+    definition: "Camera biến điểm 3D thành tọa độ 2D bằng phép chiếu phối cảnh. Trong mô hình pinhole, tia sáng đi qua tâm chiếu và giao với mặt ảnh; độ sâu bị mất nên cùng một pixel có thể tương ứng vô số điểm nằm trên một tia trong không gian.",
+    mechanism: "Với điểm camera (X,Y,Z), tọa độ ảnh lý tưởng là x=fX/Z và y=fY/Z. Tiêu cự lớn thu hẹp trường nhìn và phóng đại vật thể; sensor và lens thật tạo radial/tangential distortion, blur, vignetting và noise. Exposure quyết định lượng photon tích lũy trong một frame.",
+    limits: "Mô hình pinhole là xấp xỉ. Camera góc rộng, rolling shutter và chuyển động nhanh tạo sai lệch rõ rệt. Humanoid rung đầu khi bước nên cần exposure đủ ngắn, timestamp chính xác và calibration phù hợp với resolution thực tế.",
+    formula: "x = fX/Z,  y = fY/Z",
+  };
+  if (/edge|canny|sobel|laplacian|hough|biên|đường thẳng/.test(text)) return {
+    definition: "Biên là vị trí ảnh thay đổi cường độ hoặc màu nhanh, thường tương ứng ranh giới vật thể, thay đổi vật liệu hay bóng đổ. Đạo hàm bậc nhất cho vector gradient; độ lớn biểu thị cường độ biên và hướng gradient vuông góc với biên.",
+    mechanism: "Sobel xấp xỉ đạo hàm theo x và y. Canny lần lượt làm mượt Gaussian, tính gradient, non-maximum suppression và hysteresis bằng hai ngưỡng. Hough chuyển mỗi điểm biên sang tập tham số đường thẳng; cực đại trong không gian tham số đại diện cho đường được nhiều điểm ủng hộ.",
+    limits: "Không phải mọi biên đều là ranh giới vật thể: bóng và texture cũng tạo gradient. Ngưỡng thấp sinh nhiễu, ngưỡng cao bỏ sót biên. Trước khi dùng biên cho điều hướng phải kiểm tra tính liên tục và độ ổn định qua nhiều frame.",
+    formula: "|∇I| = √(Gx² + Gy²),  θ = atan2(Gy,Gx)",
+  };
+  if (/morphology|structuring|opening|closing|connected|contour|shape|thành phần/.test(text)) return {
+    definition: "Hình thái học xử lý cấu trúc của mặt nạ nhị phân bằng một structuring element. Erosion chỉ giữ vị trí mà kernel nằm trọn trong foreground; dilation mở rộng foreground khi kernel chạm vùng đó. Kích thước và hình dạng kernel mã hóa loại cấu trúc muốn giữ.",
+    mechanism: "Opening = erosion rồi dilation, phù hợp loại chấm nhiễu nhỏ. Closing = dilation rồi erosion, phù hợp lấp khe và lỗ nhỏ. Connected components gom các pixel kề nhau thành vùng; contour biểu diễn đường bao để tính diện tích, centroid, bounding box và moments.",
+    limits: "Kernel quá lớn có thể xóa vật nhỏ hoặc nối hai vật riêng biệt. Kết quả phụ thuộc connectivity 4/8 và chất lượng mask đầu vào. Với vùng có thể bước, cần thêm ràng buộc hình học thay vì chỉ chọn component lớn nhất.",
+    formula: "Opening(A,B)=(A⊖B)⊕B; Closing(A,B)=(A⊕B)⊖B",
+  };
+  if (/corner|blob|keypoint|descriptor|matching|ransac|optical flow|theo dõi|scale-space/.test(text)) return {
+    definition: "Đặc trưng cục bộ là vị trí có cấu trúc đủ riêng biệt để phát hiện lại khi camera hoặc vật thể thay đổi. Corner thay đổi mạnh theo hai hướng; descriptor mã hóa lân cận thành vector; matching tìm các vector tương tự giữa hai ảnh.",
+    mechanism: "Harris dùng eigenvalue của structure tensor để đo mức biến thiên hai chiều. Scale-space tìm cấu trúc ở nhiều mức Gaussian. Ratio test so sánh hàng xóm gần nhất với gần thứ hai để loại match mơ hồ; RANSAC lặp việc lấy mẫu tối thiểu, ước lượng mô hình và đếm inlier. Optical flow ước lượng dịch chuyển từ brightness constancy.",
+    limits: "Texture lặp, blur và thay đổi viewpoint tạo match sai. RANSAC chỉ tốt khi mô hình hình học đúng và tỷ lệ inlier đủ cao. Theo dõi lâu gây drift, vì vậy pipeline robot cần re-detection và kiểm tra consistency.",
+    formula: "I(x,y,t) ≈ I(x+u,y+v,t+1) ⇒ Ix·u + Iy·v + It = 0",
+  };
+  if (/pipeline|latency|fps|ros2|topic|timestamp|failure|domain gap|mô phỏng|kiểm thử|perception/.test(text)) return {
+    definition: "Pipeline perception là chuỗi hợp đồng dữ liệu từ camera đến đầu ra mà planner hoặc controller sử dụng. Mỗi khâu phải công bố frame, timestamp, đơn vị, độ tin cậy và điều kiện thất bại; nếu thiếu một trong các thông tin này, đầu ra có thể đúng về số nhưng sai trong hệ robot.",
+    mechanism: "Độ trễ đầu-cuối bằng tổng acquisition, transport, preprocessing, inference và post-processing. FPS chỉ đo thông lượng, không thay thế latency. ROS2 Image truyền pixel cùng header; QoS điều chỉnh reliability và queueing; record-replay cho phép chạy lại cùng dữ liệu để so sánh phiên bản.",
+    limits: "Queue dài có thể tăng FPS hiển thị nhưng làm robot phản ứng bằng frame cũ. Dữ liệu mô phỏng thiếu noise, blur và exposure thật tạo domain gap. Khi mất camera hoặc confidence giảm, hệ thống phải chuyển sang trạng thái suy giảm an toàn thay vì tiếp tục điều khiển mù.",
+    formula: "T_end-to-end = T_capture + T_transport + T_process + T_publish",
+  };
+  return {
+    definition: `${lesson.title} được nghiên cứu như một thành phần có đầu vào, phép biến đổi và đầu ra xác định. Trong computer vision, điều quan trọng không chỉ là thuật toán tạo kết quả gì mà còn là giả định nào khiến kết quả đó có giá trị.`,
+    mechanism: `${lesson.concepts[0]} mô tả nguyên lý chính; ${lesson.concepts[1]} giúp chọn cách biểu diễn hoặc triển khai. Ta bắt đầu từ dữ liệu camera, áp dụng phép xử lý có tham số, rồi đánh giá bằng tiêu chí định lượng thay vì chọn kết quả bằng cảm giác.`,
+    limits: "Kết quả phải được kiểm tra qua nhiều cảnh, khoảng cách, ánh sáng và chuyển động. Một phương pháp tốt trên ảnh tĩnh chưa chắc đáp ứng độ trễ, tính ổn định và failure handling của Humanoid Robot.",
+    formula: "output = validate(process(input, parameters))",
+  };
+}
+
+function CvLessonVisual({ lesson }: { lesson: CourseLesson }) {
+  const text = `${lesson.title} ${lesson.concepts.join(" ")}`.toLowerCase();
+  const mode = /edge|canny|sobel|hough/.test(text) ? "edge" : /histogram|contrast|color|màu|threshold/.test(text) ? "color" : /feature|corner|keypoint|matching|ransac|flow|theo dõi/.test(text) ? "feature" : /morphology|connected|contour/.test(text) ? "mask" : /filter|gaussian|median|noise|nhiễu/.test(text) ? "filter" : "pipeline";
+  return <div className={`cv-visual-example cv-visual-${mode}`}>
+    <div className="cv-visual-stage"><header><span>01</span><b>Ảnh đầu vào</b></header><div className="cv-frame cv-frame-input"><i/><i/><i/><i/><em>Camera frame</em></div><p>Dữ liệu gốc phải giữ metadata, dtype, resolution và timestamp.</p></div>
+    <ArrowRight size={25}/>
+    <div className="cv-visual-stage"><header><span>02</span><b>{lesson.concepts[0]}</b></header><div className="cv-frame cv-frame-process"><i/><i/><i/><i/><em>Processing</em></div><p>Áp dụng phép biến đổi với tham số được ghi lại để tái lập kết quả.</p></div>
+    <ArrowRight size={25}/>
+    <div className="cv-visual-stage"><header><span>03</span><b>Kết quả kiểm tra</b></header><div className="cv-frame cv-frame-output"><i/><i/><i/><i/><em>Validated output</em></div><p>Đánh giá chất lượng, latency và trường hợp thuật toán thất bại.</p></div>
+  </div>;
+}
 
 function CodingPlaygroundWorkspace({ kind, module, lessonTitle, onBack }: { kind: "Coding" | "Simulation"; module: CurriculumModule; lessonTitle: string; onBack: () => void }) {
   const isSimulation = kind === "Simulation";
@@ -1010,6 +1080,7 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
   const selected = chapters[activeLesson.chapter].lessons[activeLesson.lesson];
   const workspaceName = lessonWorkspaceName(selected.kind);
   const lessonCount = chapters.reduce((total, chapter) => total + chapter.lessons.length, 0);
+  const cvTheory = isComputerVisionFundamentals ? getCvTheory(selected) : null;
 
   if (openedWorkspace === "Coding Playground" && (selected.kind === "Coding" || selected.kind === "Simulation")) {
     return <CodingPlaygroundWorkspace kind={selected.kind} module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
@@ -1066,14 +1137,21 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
             <h3>1. Mục tiêu của bài học</h3>
             <p>{selected.summary}</p>
             <ul className="lesson-objectives">{selected.objectives.map((objective) => <li key={objective}><CheckCircle2 size={16}/>{objective}</li>)}</ul>
-            <div className="lesson-callout"><Info size={18}/><p><b>Điểm cần ghi nhớ</b> {selected.concepts.join(" · ")}. Trên robot thật, luôn kiểm tra giả định bằng dữ liệu camera và đo độ trễ thay vì chỉ quan sát kết quả đẹp trên một ảnh.</p></div>
-            <h3>2. Kiến thức trọng tâm</h3>
+            {cvTheory && <div className="lesson-theory">
+              <h3>2. Định nghĩa và bản chất</h3><p>{cvTheory.definition}</p>
+              <h3>3. Nguyên lý hoạt động</h3><p>{cvTheory.mechanism}</p>
+              <div className="lesson-formula"><span>BIỂU THỨC TRỌNG TÂM</span><code>{cvTheory.formula}</code></div>
+              <h3>4. Điều kiện áp dụng và giới hạn</h3><p>{cvTheory.limits}</p>
+            </div>}
+            <div className="lesson-callout"><Info size={18}/><p><b>Liên hệ Humanoid Robot</b> {selected.concepts.join(" · ")}. Luôn kiểm tra bằng dữ liệu camera thật, đo độ trễ và xác định hành vi an toàn khi đầu ra không còn đáng tin cậy.</p></div>
+            <h3>{cvTheory ? "5" : "2"}. Kiến thức trọng tâm</h3>
             <div className="lesson-concept-grid">{selected.concepts.map((concept, index) => <article key={concept}><span>0{index + 1}</span><b>{concept}</b><p>{index === 0 ? "Nắm định nghĩa, dữ liệu đầu vào, đầu ra và điều kiện áp dụng." : "So sánh lựa chọn kỹ thuật, sai số và ảnh hưởng tới pipeline humanoid."}</p></article>)}</div>
-            <h3>3. Quy trình thực hành</h3>
+            <h3>{cvTheory ? "6" : "3"}. Quy trình thực hành</h3>
             <ol><li>Đọc và kiểm tra metadata, kích thước cùng kiểu dữ liệu đầu vào.</li><li>Triển khai phép biến đổi tối thiểu và lưu lại tham số.</li><li>Kiểm thử trên điều kiện bình thường, thiếu sáng, chuyển động và nhiễu.</li><li>Đo chất lượng đầu ra, thời gian xử lý và xác định failure mode.</li></ol>
             {workspaceName && <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>}
           </section> : <section className="lesson-example-content">
-            <span>VÍ DỤ ỨNG DỤNG · HUMANOID ROBOT</span><h3>{selected.example}</h3><pre><code>{`frame = camera.read()\nassert frame is not None\n\nresult = process(frame)\nlatency_ms = measure_latency(result)\n\nvalidate(result)\nlog_metrics(latency_ms)`}</code></pre><p>Ví dụ mô tả đúng cấu trúc kiểm thử của bài. Với bài Coding hoặc Simulation, workspace đi kèm cho phép tiếp tục triển khai; runtime chưa kết nối sẽ được ghi rõ trong chính workspace.</p>
+            <span>VÍ DỤ TRỰC QUAN · HUMANOID ROBOT</span><h3>{selected.example}</h3>
+            {isComputerVisionFundamentals ? <><CvLessonVisual lesson={selected}/><div className="cv-example-explanation"><h4>Cách đọc minh họa</h4><ol><li>Quan sát ảnh đầu vào và xác định tín hiệu cần giữ lại.</li><li>Theo dõi thay đổi do <b>{selected.concepts[0]}</b> tạo ra ở khung giữa.</li><li>Đối chiếu kết quả với mục tiêu của robot; kiểm tra cả trường hợp ánh sáng yếu, blur hoặc chuyển động.</li></ol></div></> : <pre><code>{`frame = camera.read()\nresult = process(frame)\nvalidate(result)`}</code></pre>}
             {workspaceName && <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>}
           </section>}
         </main>

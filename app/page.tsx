@@ -454,7 +454,7 @@ function lessonKind(track: "perception" | "control", chapterIndex: number, lesso
 }
 
 function lessonWorkspaceName(kind: LessonKind) {
-  if (kind === "Robotics") return null;
+  if (kind === "Robotics") return "Robotic Workspace";
   if (kind === "Control") return "Control Workspace";
   if (kind === "ROS2") return "ROS2 Workspace";
   if (kind === "Quiz") return "Quiz";
@@ -632,6 +632,126 @@ function ControlWorkspace({ module, lessonTitle, onBack }: { module: CurriculumM
   );
 }
 
+type RobotPoint = { x: number; y: number; z: number };
+
+function calculateRobotPose(angles: number[], lengths: number[]) {
+  const points: RobotPoint[] = [{ x: 0, y: 0, z: 0 }];
+  let yaw = 0;
+  let pitch = Math.PI / 2;
+  angles.forEach((angle, index) => {
+    const radians = angle * Math.PI / 180;
+    if (index % 2 === 0) yaw += radians;
+    else pitch += radians;
+    const previous = points[points.length - 1];
+    points.push({
+      x: previous.x + lengths[index] * Math.cos(pitch) * Math.cos(yaw),
+      y: previous.y + lengths[index] * Math.cos(pitch) * Math.sin(yaw),
+      z: previous.z + lengths[index] * Math.sin(pitch),
+    });
+  });
+  return { points, end: points[points.length - 1], yaw, pitch };
+}
+
+function RobotArmCanvas({ angles, lengths, target }: { angles: number[]; lengths: number[]; target: RobotPoint }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pose = useMemo(() => calculateRobotPose(angles, lengths), [angles, lengths]);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const width = Math.max(620, canvas.clientWidth);
+    const height = Math.max(430, canvas.clientHeight);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr; canvas.height = height * dpr;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+    const scale = Math.min(width, height) * .32;
+    const project = (point: RobotPoint) => ({
+      x: width * .45 + (point.x - point.y) * scale,
+      y: height * .8 - point.z * scale - (point.x + point.y) * scale * .2,
+    });
+    ctx.strokeStyle = "rgba(118,139,177,.14)"; ctx.lineWidth = 1;
+    for (let i = -7; i <= 7; i++) {
+      ctx.beginPath(); ctx.moveTo(width * .12, height * .8 + i * 16); ctx.lineTo(width * .88, height * .8 + i * 16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(width * .2 + i * 34, height * .94); ctx.lineTo(width * .7 + i * 20, height * .58); ctx.stroke();
+    }
+    const origin = project({ x: 0, y: 0, z: 0 });
+    [["#fb4e63", 62, 0, "X"], ["#35d98b", -38, -32, "Y"], ["#4b8dff", 0, -72, "Z"]].forEach(([color, dx, dy, label]) => {
+      ctx.strokeStyle = String(color); ctx.fillStyle = String(color); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(origin.x, origin.y); ctx.lineTo(origin.x + Number(dx), origin.y + Number(dy)); ctx.stroke();
+      ctx.fillText(String(label), origin.x + Number(dx) + 5, origin.y + Number(dy));
+    });
+    const targetPoint = project(target);
+    ctx.strokeStyle = "#38d6dd"; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(targetPoint.x, targetPoint.y, 11, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(targetPoint.x - 18, targetPoint.y); ctx.lineTo(targetPoint.x + 18, targetPoint.y); ctx.moveTo(targetPoint.x, targetPoint.y - 18); ctx.lineTo(targetPoint.x, targetPoint.y + 18); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle = "#79eaf0"; ctx.fillText("TARGET", targetPoint.x + 15, targetPoint.y - 15);
+    const projected = pose.points.map(project);
+    const gradient = ctx.createLinearGradient(projected[0].x, projected[0].y, projected.at(-1)!.x, projected.at(-1)!.y);
+    gradient.addColorStop(0, "#9eabc0"); gradient.addColorStop(.5, "#e3e9f4"); gradient.addColorStop(1, "#8c63f5");
+    projected.slice(1).forEach((point, index) => {
+      const previous = projected[index];
+      ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.lineWidth = 21; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(previous.x, previous.y); ctx.lineTo(point.x, point.y); ctx.stroke();
+      ctx.strokeStyle = gradient; ctx.lineWidth = 14;
+      ctx.beginPath(); ctx.moveTo(previous.x, previous.y); ctx.lineTo(point.x, point.y); ctx.stroke();
+      ctx.fillStyle = index === projected.length - 2 ? "#9b6cff" : "#27334a";
+      ctx.strokeStyle = "#bcc7da"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(point.x, point.y, index === projected.length - 2 ? 9 : 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    });
+    ctx.fillStyle = "#dce5f5"; ctx.font = "600 12px system-ui";
+    ctx.fillText("6-DOF kinematic preview", 18, 25);
+  }, [pose, target]);
+  return <canvas ref={canvasRef} aria-label="Mô hình động học cánh tay robot 6 bậc tự do"/>;
+}
+
+function RoboticWorkspace({ module, lessonTitle, onBack }: { module: CurriculumModule; lessonTitle: string; onBack: () => void }) {
+  const initialAngles = [30, -20, 45, 10, 60, -30];
+  const lengths = useMemo(() => [.19, .43, .2, .38, .16, .08], []);
+  const [angles, setAngles] = useState(initialAngles);
+  const [target, setTarget] = useState<RobotPoint>({ x: .5, y: .3, z: .6 });
+  const [saved, setSaved] = useState(false);
+  const pose = useMemo(() => calculateRobotPose(angles, lengths), [angles, lengths]);
+  const distance = Math.hypot(pose.end.x - target.x, pose.end.y - target.y, pose.end.z - target.z);
+  const cy = Math.cos(pose.yaw), sy = Math.sin(pose.yaw), cp = Math.cos(pose.pitch), sp = Math.sin(pose.pitch);
+  const matrix = [[cy * cp, -sy, cy * sp, pose.end.x], [sy * cp, cy, sy * sp, pose.end.y], [-sp, 0, cp, pose.end.z], [0, 0, 0, 1]];
+  const updateAngle = (index: number, value: number) => setAngles((current) => current.map((angle, item) => item === index ? value : angle));
+  const saveConfiguration = () => {
+    window.localStorage.setItem(`robolearn-robot-${module.track}-${module.moduleNumber}`, JSON.stringify({ angles, target }));
+    setSaved(true); window.setTimeout(() => setSaved(false), 1800);
+  };
+  return (
+    <section className="robotic-workspace">
+      <header className="robotic-workspace-header">
+        <button onClick={onBack}><PanelLeftOpen size={18}/> Quay lại bài học</button>
+        <div><span>ROBOTIC WORKSPACE</span><h1>{lessonTitle}</h1><p>{module.title} · Cánh tay 6 bậc tự do · Forward kinematics trong trình duyệt</p></div>
+        <div className="robotic-header-actions"><button onClick={() => setAngles(initialAngles)}><RotateCcw size={16}/> Reset</button><button onClick={saveConfiguration}><Save size={16}/>{saved ? "Đã lưu" : "Lưu cấu hình"}</button></div>
+      </header>
+      <div className="robotic-workspace-grid">
+        <aside className="robot-joint-panel">
+          <header><SlidersHorizontal size={17}/><div><b>Điều khiển khớp</b><span>Giới hạn hiển thị ±180°</span></div></header>
+          {angles.map((angle, index) => <label className="robot-joint-control" key={index}><span><b>Joint {index + 1}</b><em>{angle.toFixed(1)}°</em></span><input type="range" min="-180" max="180" step="1" value={angle} onChange={(event) => updateAngle(index, Number(event.target.value))}/><small><i>-180°</i><i>180°</i></small></label>)}
+          <section className="robot-engine-note"><Info size={16}/><p><b>Kinematic preview</b>Đây là mô hình động học hình học, chưa có va chạm, trọng lực hoặc physics engine.</p></section>
+        </aside>
+        <main className="robot-model-column">
+          <section className="robot-model-panel"><header><div><Move3d size={17}/><b>Mô hình robot & không gian 3D</b></div><span>Calculated live</span></header><RobotArmCanvas angles={angles} lengths={lengths} target={target}/></section>
+          <div className="robot-data-grid">
+            <section><header><b>Thông số khớp</b><span>Chiều dài liên kết</span></header><table><thead><tr><th>Khớp</th><th>θ (°)</th><th>Link (m)</th></tr></thead><tbody>{angles.map((angle, index) => <tr key={index}><td>{index + 1}</td><td>{angle.toFixed(1)}</td><td>{lengths[index].toFixed(3)}</td></tr>)}</tbody></table></section>
+            <section><header><b>Đầu công tác</b><span>Hệ tọa độ gốc</span></header><dl><div><dt>X</dt><dd>{pose.end.x.toFixed(3)} m</dd></div><div><dt>Y</dt><dd>{pose.end.y.toFixed(3)} m</dd></div><div><dt>Z</dt><dd>{pose.end.z.toFixed(3)} m</dd></div><div><dt>Khoảng cách tới mục tiêu</dt><dd>{distance.toFixed(3)} m</dd></div></dl></section>
+          </div>
+        </main>
+        <aside className="robot-insight-column">
+          <section className="robot-matrix"><header><Sigma size={17}/><div><b>Ma trận biến đổi</b><span>Base → End-effector</span></div></header><div>{matrix.map((row, rowIndex) => <p key={rowIndex}>{row.map((value, index) => <span key={index}>{value.toFixed(3)}</span>)}</p>)}</div></section>
+          <section className="robot-target-panel"><header><Target size={17}/><div><b>Vị trí mục tiêu</b><span>Nhập theo mét</span></div></header>{(["x", "y", "z"] as const).map((axis) => <label key={axis}><span>{axis.toUpperCase()}</span><input type="number" min="-1.5" max="1.5" step=".01" value={target[axis]} onChange={(event) => setTarget((current) => ({ ...current, [axis]: Number(event.target.value) }))}/></label>)}<div className="robot-error"><span>Sai số hiện tại</span><b>{distance.toFixed(3)} m</b></div></section>
+          <section className="robot-goals"><header><Target size={17}/><b>Mục tiêu</b></header><p className={distance < .15 ? "done" : ""}><CheckCircle2 size={15}/> Đưa đầu công tác cách mục tiêu dưới 0.15 m</p><p className={pose.end.z > .25 ? "done" : ""}><CheckCircle2 size={15}/> Giữ đầu công tác trên mặt phẳng Z = 0.25 m</p></section>
+          <section className="robot-runtime"><header><Info size={17}/><b>Trạng thái hệ thống</b></header><dl><div><dt>Forward kinematics</dt><dd>Trong trình duyệt</dd></div><div><dt>Physics engine</dt><dd>Chưa kết nối</dd></div><div><dt>Robot hardware</dt><dd>Chưa kết nối</dd></div></dl></section>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
 function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule; onBack: () => void }) {
   const [openChapter, setOpenChapter] = useState(0);
   const [activeLesson, setActiveLesson] = useState({ chapter: 0, lesson: 0 });
@@ -649,6 +769,9 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
   }
   if (openedWorkspace === "Control Workspace" && selected.kind === "Control") {
     return <ControlWorkspace module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
+  }
+  if (openedWorkspace === "Robotic Workspace" && selected.kind === "Robotics") {
+    return <RoboticWorkspace module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
   }
 
   if (openedWorkspace) return (

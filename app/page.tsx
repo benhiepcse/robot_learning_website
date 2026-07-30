@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen,
   BriefcaseBusiness,
@@ -530,6 +530,108 @@ function CodingPlaygroundWorkspace({ kind, module, lessonTitle, onBack }: { kind
   );
 }
 
+function ControlPlot({ type, kp, ki, kd, zeta, wn }: { type: "magnitude" | "phase"; kp: number; ki: number; kd: number; zeta: number; wn: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const width = Math.max(520, canvas.clientWidth);
+    const height = Math.max(210, canvas.clientHeight);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+    const pad = { left: 48, right: 18, top: 20, bottom: 30 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+    const yMin = type === "magnitude" ? -80 : -270;
+    const yMax = type === "magnitude" ? 50 : 90;
+    ctx.strokeStyle = "rgba(128,145,170,.14)";
+    ctx.lineWidth = 1;
+    ctx.font = "10px system-ui";
+    ctx.fillStyle = "#758198";
+    for (let i = 0; i <= 5; i++) {
+      const y = pad.top + plotH * i / 5;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke();
+      ctx.fillText(String(Math.round(yMax - (yMax - yMin) * i / 5)), 8, y + 3);
+    }
+    for (let i = 0; i <= 4; i++) {
+      const x = pad.left + plotW * i / 4;
+      ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, height - pad.bottom); ctx.stroke();
+      ctx.fillText(`10${["⁻²","⁻¹","⁰","¹","²"][i]}`, x - 9, height - 10);
+    }
+    const points = Array.from({ length: 180 }, (_, index) => {
+      const logW = -2 + index / 179 * 4;
+      const w = Math.pow(10, logW);
+      const controllerRe = kp;
+      const controllerIm = kd * w - ki / Math.max(w, 1e-6);
+      const denRe = wn * wn - w * w;
+      const denIm = 2 * zeta * wn * w;
+      const denNorm = denRe * denRe + denIm * denIm;
+      const re = wn * wn * (controllerRe * denRe + controllerIm * denIm) / denNorm;
+      const im = wn * wn * (controllerIm * denRe - controllerRe * denIm) / denNorm;
+      const value = type === "magnitude" ? 20 * Math.log10(Math.max(1e-8, Math.hypot(re, im))) : Math.atan2(im, re) * 180 / Math.PI;
+      return { x: pad.left + index / 179 * plotW, y: pad.top + (yMax - Math.max(yMin, Math.min(yMax, value))) / (yMax - yMin) * plotH };
+    });
+    const gradient = ctx.createLinearGradient(pad.left, 0, width - pad.right, 0);
+    gradient.addColorStop(0, "#3b82f6"); gradient.addColorStop(.55, "#8b5cf6"); gradient.addColorStop(1, "#2bd17f");
+    ctx.strokeStyle = gradient; ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+    ctx.stroke();
+    ctx.fillStyle = "#8692a7";
+    ctx.fillText(type === "magnitude" ? "Magnitude (dB)" : "Phase (deg)", pad.left, 12);
+    ctx.fillText("Frequency (rad/s)", width / 2 - 40, height - 10);
+  }, [type, kp, ki, kd, zeta, wn]);
+  return <canvas ref={canvasRef} />;
+}
+
+function ControlWorkspace({ module, lessonTitle, onBack }: { module: CurriculumModule; lessonTitle: string; onBack: () => void }) {
+  const [kp, setKp] = useState(2.5);
+  const [ki, setKi] = useState(1.2);
+  const [kd, setKd] = useState(0.35);
+  const [zeta, setZeta] = useState(0.7);
+  const [wn, setWn] = useState(2);
+  const [history, setHistory] = useState<Array<{ time: string; kp: number; ki: number; kd: number }>>([]);
+  const gainEstimate = Math.max(0, 20 * Math.log10(1 + kp + ki + kd)).toFixed(1);
+  const phaseEstimate = Math.max(0, Math.min(89, 35 + zeta * 28 - kd * 4)).toFixed(1);
+  const bandwidth = (wn * Math.sqrt(1 + kp / 3)).toFixed(2);
+  const controlValue = (label: string, value: number, setter: (value: number) => void, min: number, max: number, step: number) => (
+    <label className="control-slider"><span>{label}<b>{value.toFixed(2)}</b></span><input type="range" min={min} max={max} step={step} value={value} onChange={(event) => setter(Number(event.target.value))}/></label>
+  );
+
+  return (
+    <section className="control-workspace">
+      <header className="control-workspace-header">
+        <button onClick={onBack}><PanelLeftOpen size={18}/> Quay lại bài học</button>
+        <div><span>CONTROL WORKSPACE</span><h1>{lessonTitle}</h1><p>{module.title} · Mô hình bậc hai · Cập nhật trực tiếp trên trình duyệt</p></div>
+        <div className="control-live-state"><i/><p><b>Mô hình đang hoạt động</b><span>Biểu đồ dùng phép tính tần số thực từ tham số hiện tại.</span></p></div>
+      </header>
+      <div className="control-workspace-grid">
+        <aside className="control-parameters">
+          <section><span>01</span><h2>Chọn mô hình hệ thống</h2><label className="control-select"><small>Plant G(s)</small><select><option>Second-order system</option></select></label><div className="transfer-function">G(s) = ωₙ² / (s² + 2ζωₙs + ωₙ²)</div>{controlValue("ζ · Damping ratio", zeta, setZeta, .1, 2, .05)}{controlValue("ωₙ · Natural frequency", wn, setWn, .5, 10, .1)}</section>
+          <section><span>02</span><h2>Thiết lập PID</h2>{controlValue("Kp · Proportional", kp, setKp, 0, 10, .05)}{controlValue("Ki · Integral", ki, setKi, 0, 6, .05)}{controlValue("Kd · Derivative", kd, setKd, 0, 3, .01)}<button className="save-experiment" onClick={() => setHistory((items) => [{ time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }), kp, ki, kd }, ...items].slice(0, 5))}><Save size={17}/> Lưu lần thử</button></section>
+          <section className="control-display"><span>03</span><h2>Hiển thị</h2><label><input type="checkbox" defaultChecked/> Magnitude plot</label><label><input type="checkbox" defaultChecked/> Phase plot</label><label><input type="checkbox" defaultChecked/> Frequency grid</label></section>
+        </aside>
+        <main className="control-visualization">
+          <section className="control-chart-card"><header><div><b>Bode Plot · Magnitude</b><span>PID × Second-order plant</span></div><em>Calculated</em></header><ControlPlot type="magnitude" kp={kp} ki={ki} kd={kd} zeta={zeta} wn={wn}/></section>
+          <section className="control-chart-card"><header><div><b>Bode Plot · Phase</b><span>Open-loop frequency response</span></div><em>Calculated</em></header><ControlPlot type="phase" kp={kp} ki={ki} kd={kd} zeta={zeta} wn={wn}/></section>
+          <div className="control-bottom-grid"><section><h3>Thông số ước lượng</h3><dl><div><dt>Gain indicator</dt><dd>{gainEstimate} dB</dd></div><div><dt>Phase indicator</dt><dd>{phaseEstimate}°</dd></div><div><dt>Bandwidth estimate</dt><dd>{bandwidth} rad/s</dd></div></dl><small>Các chỉ số này là ước lượng giao diện, chưa thay thế phép phân tích control chuyên dụng.</small></section><section className="control-block-diagram"><h3>Sơ đồ khối kín</h3><div><span>R(s)</span><b>Σ</b><em>PID<br/><small>Kp + Ki/s + Kds</small></em><i>G(s)<br/><small>Second order</small></i><span>Y(s)</span></div></section></div>
+        </main>
+        <aside className="control-insights">
+          <section><header><Target size={17}/><h2>Mục tiêu thiết kế</h2></header><label><input type="checkbox" checked={Number(gainEstimate) > 6} readOnly/> Gain indicator &gt; 6 dB</label><label><input type="checkbox" checked={Number(phaseEstimate) > 45} readOnly/> Phase indicator &gt; 45°</label><label><input type="checkbox" checked={Number(bandwidth) > 2} readOnly/> Bandwidth &gt; 2 rad/s</label></section>
+          <section className="control-guidance"><header><Lightbulb size={17}/><h2>Gợi ý</h2></header><p>Tăng Kp để tăng phản ứng, Ki để giảm sai số tĩnh và Kd để tăng damping. Mỗi thay đổi đều cập nhật hai đồ thị ngay lập tức.</p></section>
+          <section><header><History size={17}/><h2>Lịch sử thử nghiệm</h2></header>{history.length ? history.map((item, index) => <div className="control-history-item" key={`${item.time}-${index}`}><b>{item.time}</b><span>Kp {item.kp.toFixed(2)} · Ki {item.ki.toFixed(2)} · Kd {item.kd.toFixed(2)}</span></div>) : <div className="control-history-empty">Chưa có lần thử nào được lưu.</div>}</section>
+          <section className="control-runtime-status"><header><Info size={17}/><h2>Trạng thái hệ thống</h2></header><dl><div><dt>Tính Bode plot</dt><dd>Trong trình duyệt</dd></div><div><dt>Control backend</dt><dd>Chưa kết nối</dd></div><div><dt>Robot hardware</dt><dd>Chưa kết nối</dd></div></dl></section>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
 function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule; onBack: () => void }) {
   const [openChapter, setOpenChapter] = useState(0);
   const [activeLesson, setActiveLesson] = useState({ chapter: 0, lesson: 0 });
@@ -544,6 +646,9 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
 
   if (openedWorkspace === "Coding Playground" && (selected.kind === "Coding" || selected.kind === "Simulation")) {
     return <CodingPlaygroundWorkspace kind={selected.kind} module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
+  }
+  if (openedWorkspace === "Control Workspace" && selected.kind === "Control") {
+    return <ControlWorkspace module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
   }
 
   if (openedWorkspace) return (

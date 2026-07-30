@@ -658,15 +658,23 @@ code { font-family:var(--font-geist-mono); }
   background:url("/roadmap-galaxy-v1.png") right 38% center/cover no-repeat;
   filter:saturate(.92) brightness(.9);
   mix-blend-mode:screen;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.28) 20%,#000 48%,#000 78%,transparent 100%);
-  mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.28) 20%,#000 48%,#000 78%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 78% 92% at 75% 12%,#000 0 36%,rgba(0,0,0,.92) 48%,rgba(0,0,0,.52) 67%,rgba(0,0,0,.12) 84%,transparent 100%);
+  mask-image:radial-gradient(ellipse 78% 92% at 75% 12%,#000 0 36%,rgba(0,0,0,.92) 48%,rgba(0,0,0,.52) 67%,rgba(0,0,0,.12) 84%,transparent 100%);
 }
 .roadmap-header{min-height:124px;padding-right:35%}
 .roadmap-summary{display:none!important}
+.roadmap-control .roadmap-galaxy{
+  opacity:.48;
+  filter:hue-rotate(82deg) saturate(1.12) brightness(.86);
+}
 .theme-light .roadmap-galaxy{
   opacity:.2;
   filter:saturate(.55) contrast(.78) brightness(1.18);
   mix-blend-mode:multiply;
+}
+.theme-light .roadmap-control .roadmap-galaxy{
+  opacity:.17;
+  filter:hue-rotate(82deg) saturate(.7) contrast(.76) brightness(1.2);
 }
 
 /* Roadmap cards expand with their content instead of clipping it */

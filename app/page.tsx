@@ -5,12 +5,16 @@ import {
   BookOpen,
   BriefcaseBusiness,
   ArrowRight,
+  CircleGauge,
   Eye,
   Gamepad2,
+  History,
   LayoutDashboard,
+  Lightbulb,
   Library,
   Map,
   Sparkles,
+  Target,
   Settings,
   Tags,
   UsersRound,
@@ -301,39 +305,75 @@ function RoadmapWorkspace() {
         <button role="tab" aria-selected={!isPerception} className={!isPerception ? "active" : ""} onClick={() => setTrack("control")}><Gamepad2 size={19}/> Control & Simulation</button>
       </div>
 
-      <div className="roadmap-intro">
-        <div className="roadmap-orb"><TrackIcon size={26}/></div>
-        <div><span>{isPerception ? "AI PERCEPTION TRACK" : "CONTROL & SIMULATION TRACK"}</span><h2>{isPerception ? "Humanoid AI Perception → VLM → VLA" : "Humanoid Control, Simulation & Deployment"}</h2><p>{isPerception ? "Xây dựng năng lực để humanoid nhìn, hiểu ngôn ngữ, suy luận về thế giới và chuyển ý định thành hành động." : "Xây dựng nền tảng để mô phỏng, lập kế hoạch, điều khiển chuyển động và triển khai humanoid an toàn."}</p></div>
-        <Sparkles size={22}/>
-      </div>
+      <div className="roadmap-body">
+        <div className="roadmap-primary">
+          <div className="roadmap-intro">
+            <div className="roadmap-orb"><TrackIcon size={26}/></div>
+            <div><span>{isPerception ? "AI PERCEPTION TRACK" : "CONTROL & SIMULATION TRACK"}</span><h2>{isPerception ? "Humanoid AI Perception → VLM → VLA" : "Humanoid Control, Simulation & Deployment"}</h2><p>{isPerception ? "Xây dựng năng lực để humanoid nhìn, hiểu ngôn ngữ, suy luận về thế giới và chuyển ý định thành hành động." : "Xây dựng nền tảng để mô phỏng, lập kế hoạch, điều khiển chuyển động và triển khai humanoid an toàn."}</p></div>
+            <Sparkles size={22}/>
+          </div>
 
-      <div className="roadmap-phases">
-        {phases.map((phase, phaseIndex) => (
-          <section className="roadmap-phase" key={phase.phase}>
-            <header><div><span>0{phaseIndex + 1}</span><h2>{phase.phase}</h2></div><p>{phase.caption}</p></header>
-            <div className="roadmap-stage-row">
-              {phase.stages.map((stage, stageIndex) => {
-                const number = phaseIndex * 5 + stageIndex + 1;
-                return (
-                  <article className="roadmap-stage" key={stage[0]}>
-                    <div className="stage-top"><span>{number}</span><small>PLANNED</small></div>
-                    <h3>{stage[0]}</h3>
-                    <p>{stage[1]}</p>
-                    <footer><i><b style={{ width: "0%" }} /></i><span>0%</span></footer>
-                    {stageIndex < phase.stages.length - 1 && <ArrowRight className="stage-arrow" size={17} aria-hidden="true"/>}
-                  </article>
-                );
-              })}
-            </div>
+          <div className="roadmap-phases">
+            {phases.map((phase, phaseIndex) => (
+              <section className="roadmap-phase" key={phase.phase}>
+                <header><div><span>0{phaseIndex + 1}</span><h2>{phase.phase}</h2></div><p>{phase.caption}</p></header>
+                <div className="roadmap-stage-row">
+                  {phase.stages.map((stage, stageIndex) => {
+                    const number = phaseIndex * 5 + stageIndex + 1;
+                    return (
+                      <article className="roadmap-stage" key={stage[0]}>
+                        <div className="stage-top"><span>{number}</span><small>PLANNED</small></div>
+                        <h3>{stage[0]}</h3>
+                        <p>{stage[1]}</p>
+                        <footer><i><b style={{ width: "0%" }} /></i><span>0%</span></footer>
+                        {stageIndex < phase.stages.length - 1 && <ArrowRight className="stage-arrow" size={17} aria-hidden="true"/>}
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          <footer className="roadmap-bottom">
+            <div className="roadmap-orb"><TrackIcon size={25}/></div>
+            <div><h2>Đầu ra của lộ trình</h2><p>{isPerception ? "Có thể xây pipeline perception đa camera, hiểu cảnh 3D, tích hợp VLM và huấn luyện VLA cho humanoid." : "Có thể mô phỏng, lập kế hoạch, điều khiển toàn thân và triển khai hệ thống trên humanoid thật."}</p></div>
+            <div className="roadmap-pill"><b>15</b><span>giai đoạn</span></div>
+          </footer>
+        </div>
+
+        <aside className="roadmap-side">
+          <section className="roadmap-side-card progress-overview">
+            <header><CircleGauge size={18}/><h3>Tiến độ tổng thể</h3></header>
+            <div className="roadmap-ring"><b>0%</b></div>
+            <p><span>Đã hoàn thành</span><b>0 / 15 giai đoạn</b></p>
+            <small>Tiến độ sẽ tự cập nhật từ các bài học thật.</small>
           </section>
-        ))}
-      </div>
 
-      <footer className="roadmap-bottom">
-        <div className="roadmap-orb"><TrackIcon size={25}/></div>
-        <div><h2>Đầu ra của lộ trình</h2><p>{isPerception ? "Có thể xây pipeline perception đa camera, hiểu cảnh 3D, tích hợp VLM và huấn luyện VLA cho humanoid." : "Có thể mô phỏng, lập kế hoạch, điều khiển toàn thân và triển khai hệ thống trên humanoid thật."}</p></div>
-        <div className="roadmap-pill"><b>15</b><span>giai đoạn</span></div>
-      </footer>
+          <section className="roadmap-side-card">
+            <header><History size={18}/><h3>Hoạt động gần đây</h3></header>
+            <div className="roadmap-side-empty"><span>○</span><p><b>Chưa có hoạt động</b><small>Lịch sử học Roadmap sẽ xuất hiện tại đây.</small></p></div>
+          </section>
+
+          <section className="roadmap-side-card next-stage">
+            <header><Lightbulb size={18}/><h3>Gợi ý tiếp theo</h3></header>
+            <div className="next-stage-number">1</div>
+            <div><b>{phases[0].stages[0][0]}</b><small>{phases[0].stages[0][1]}</small></div>
+            <i><b style={{ width: "0%" }}/></i><span>0%</span>
+            <button>Khám phá giai đoạn <ArrowRight size={15}/></button>
+          </section>
+
+          <section className="roadmap-side-card track-snapshot">
+            <header><Target size={18}/><h3>Tổng quan track</h3></header>
+            <div><b>3</b><span>Phase</span></div><div><b>15</b><span>Giai đoạn</span></div><div><b>0</b><span>Đã học</span></div>
+          </section>
+
+          <section className="roadmap-side-card competency-card">
+            <header><TrackIcon size={18}/><h3>Mục tiêu năng lực</h3></header>
+            <p>{isPerception ? "Perception 3D · VLM · Embodied reasoning · VLA" : "Dynamics · MuJoCo · Whole-body control · Sim-to-real"}</p>
+          </section>
+        </aside>
+      </div>
     </section>
   );
 }

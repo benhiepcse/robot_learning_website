@@ -309,21 +309,23 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
         </div>
       </aside>
 
-      <section className="dash-main">
-        <header className="dash-header">
-          <div><h1>Chào lại, {displayName}! <span>👋</span></h1><p>Không gian học Robotics cá nhân của bạn.</p></div>
-          <div className="header-scoreboard">
-            <div className="score-card streak-score">
-              <span>🔥</span><p><b>{currentStreak} Days</b><small>Current Streak</small></p>
-              <i>Best: {bestStreak} Days</i>
+      <section className={`dash-main ${activeNav !== "Dashboard" ? "module-view" : ""}`}>
+        {activeNav === "Dashboard" && (
+          <header className="dash-header">
+            <div><h1>Welcome, {displayName}! <span>👋</span></h1><p>Không gian học Robotics cá nhân của bạn.</p></div>
+            <div className="header-scoreboard">
+              <div className="score-card streak-score">
+                <span>🔥</span><p><b>{currentStreak} Days</b><small>Current Streak</small></p>
+                <i>Best: {bestStreak} Days</i>
+              </div>
+              <div className="score-card xp-score">
+                <p><b>{totalXp.toLocaleString("vi-VN")} XP</b><small>Level {level} · {levelProgress}% đến Level {level + 1}</small></p>
+                <div><b>Chưa xếp hạng</b><small>+{xpToday} XP hôm nay</small></div>
+                <span className="score-bars"><i/><i/><i/><i/></span>
+              </div>
             </div>
-            <div className="score-card xp-score">
-              <p><b>{totalXp.toLocaleString("vi-VN")} XP</b><small>Level {level} · {levelProgress}% đến Level {level + 1}</small></p>
-              <div><b>Chưa xếp hạng</b><small>+{xpToday} XP hôm nay</small></div>
-              <span className="score-bars"><i/><i/><i/><i/></span>
-            </div>
-          </div>
-        </header>
+          </header>
+        )}
 
         {activeNav !== "Dashboard" ? (
           <div className="standalone-empty">

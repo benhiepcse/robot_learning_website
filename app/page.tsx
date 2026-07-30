@@ -28,15 +28,26 @@ import {
   Lightbulb,
   Library,
   Map,
+  Calculator,
+  FileCode2,
+  Gauge,
+  GitBranch,
+  Hand,
+  HardHat,
   MessageSquareText,
+  Microchip,
+  MonitorCog,
   Move3d,
   Navigation,
   Network,
   Orbit,
   PersonStanding,
+  Radar,
   RadioTower,
+  Ruler,
   Rocket,
   Route,
+  Scale,
   ScanSearch,
   ShieldCheck,
   Sigma,
@@ -46,7 +57,9 @@ import {
   Settings,
   Tags,
   UsersRound,
+  Waves,
   Waypoints,
+  Workflow,
 } from "lucide-react";
 
 function LoginScreen({ onLogin }: { onLogin: (username: string) => void }) {
@@ -293,26 +306,38 @@ const perceptionRoadmap = [
 ];
 
 const controlRoadmap = [
-  { phase: "Phase 1 · Fundamentals", caption: "Cơ học và nền tảng điều khiển robot", stages: [
-    ["Robotics Math", "Frames, transforms, Lie groups"],
-    ["Robot Kinematics", "FK, IK, Jacobian"],
-    ["Robot Dynamics", "Rigid body, inertia, contacts"],
-    ["Motion Planning", "Search, sampling, trajectories"],
-    ["State Estimation", "Kalman filters, sensor fusion"],
+  { phase: "Phase 1 · Engineering Foundations", caption: "Lập trình, cơ học và mô hình chuyển động robot", stages: [
+    ["Programming & Development Tools", "Linux, Python, C++, Modern C++"],
+    ["Classical Mechanics", "Newton laws, forces, torque, work, energy, momentum, conservation"],
+    ["Rigid Body Dynamics", "Rigid motion, inertia tensor, COM, COP, quaternion, transformations"],
+    ["Robot Kinematics", "DOF, frames, DH, FK, IK, Jacobians, singularities, redundancy"],
+    ["Robot Dynamics", "Newton-Euler, Lagrange, RNEA, CRBA, ABA, forward & inverse dynamics"],
   ]},
-  { phase: "Phase 2 · Control & Simulation", caption: "Mô phỏng, điều khiển và chuyển động toàn thân", stages: [
-    ["ROS 2 Foundations", "Nodes, topics, TF, lifecycle"],
-    ["Simulation Stack", "MuJoCo, Gazebo, Isaac Sim, URDF"],
-    ["Optimal Control", "PID, LQR, MPC"],
-    ["Whole-Body Control", "QP, constraints, balance"],
-    ["Locomotion & Manipulation", "Gait, grasping, contacts"],
+  { phase: "Phase 2 · Control Systems", caption: "Từ feedback cổ điển đến điều khiển phi tuyến hiện đại", stages: [
+    ["Control Theory Fundamentals", "Open/closed loop, stability, transfer functions, Laplace, Bode, Nyquist"],
+    ["Classical Controllers", "P, PI, PD, PID, cascade PID, gain scheduling, anti-windup"],
+    ["State Space Control", "Controllability, observability, pole placement, observers, Kalman filters"],
+    ["Modern Control", "LQR, LQG, MPC, optimal, robust, adaptive, H∞ and μ-synthesis"],
+    ["Nonlinear Control", "Feedback linearization, computed torque, sliding mode, backstepping, NMPC"],
   ]},
-  { phase: "Phase 3 · Deployment", caption: "Đưa thuật toán từ mô phỏng lên humanoid thật", stages: [
-    ["Reinforcement Learning", "Simulation RL, reward design"],
-    ["Sim-to-Real", "MuJoCo training, randomization, adaptation"],
-    ["Hardware Interfaces", "Sensors, actuators, real-time control"],
-    ["System Integration", "Perception-control synchronization"],
-    ["Safety & Evaluation", "Testing, fallback, benchmarks"],
+  { phase: "Phase 3 · Humanoid Motion & Control", caption: "Điều khiển lực, toàn thân, locomotion và sinh chuyển động", stages: [
+    ["Force Control", "Position, velocity, torque, impedance, admittance and hybrid force control"],
+    ["Whole Body Control", "Operational space, task priority, null-space, contact optimization, hierarchical QP"],
+    ["Humanoid Locomotion", "Gait, footsteps, balance, ZMP, capture point, DCM and preview control"],
+    ["Motion Generation", "Trajectories, cubic/quintic polynomials, minimum jerk, Bézier, splines, time scaling"],
+  ]},
+  { phase: "Phase 4 · Hardware & Embedded Robotics", caption: "Động cơ, firmware thời gian thực và hệ thống cảm biến", stages: [
+    ["Motor Control", "DC, BLDC, PMSM, servo, FOC, SVPWM, encoders, current sensing and drivers"],
+    ["Embedded Systems", "C/C++, STM32, FreeRTOS, interrupts, DMA, timers and industrial communication"],
+    ["Sensors", "Encoders, IMU, force/torque, load cells, pressure, cameras and LiDAR"],
+  ]},
+  { phase: "Phase 5 · Simulation, ROS 2 & Deployment", caption: "Mô hình hóa, mô phỏng, tích hợp và triển khai robot an toàn", stages: [
+    ["Simulation", "MATLAB, Simulink, MuJoCo, Gazebo, Isaac Sim/Gym/Lab, Drake, Pinocchio, Webots"],
+    ["ROS 2", "ros2_control, controller manager, hardware interfaces, TF2, URDF, Xacro, MoveIt2, RViz2"],
+    ["Robot Modeling", "URDF, SDF, MJCF, CAD integration, mass properties, collision and visual models"],
+    ["Numerical Methods", "Euler, Runge-Kutta, differentiation, optimization and sparse linear solvers"],
+    ["Safety & Reliability", "Joint/torque limits, collision and fault detection, E-stop, thermal protection"],
+    ["Software Engineering", "Linux, Git, CMake, testing, profiling, debugging, real-time and multithreading"],
   ]},
 ];
 
@@ -323,9 +348,11 @@ const perceptionModuleIcons = [
 ];
 
 const controlModuleIcons = [
-  Sigma, Orbit, Cog, Route, Activity,
-  Network, Box, SlidersHorizontal, Move3d, Footprints,
-  BrainCircuit, Cpu, Cable, Combine, ShieldCheck,
+  FileCode2, Scale, Orbit, Waypoints, Cog,
+  Network, SlidersHorizontal, Move3d, BrainCircuit, Waves,
+  Hand, PersonStanding, Footprints, Route,
+  Gauge, Microchip, Radar,
+  MonitorCog, Workflow, Ruler, Calculator, ShieldCheck, GitBranch,
 ];
 
 function getModuleIcon(track: "perception" | "control", index: number) {
@@ -346,6 +373,8 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
       description: stage[1],
     })),
   );
+  const phaseCount = phases.length;
+  const moduleCount = modules.length;
   const TrackIcon = isPerception ? Eye : Gamepad2;
 
   return (
@@ -360,20 +389,20 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
           <div className="learning-zero-ring"><b>0%</b><span>Hoàn thành</span></div>
           <div className="learning-overview-copy"><span>{isPerception ? "AI PERCEPTION PROGRESS" : "CONTROL & SIMULATION PROGRESS"}</span><h2>Tiến độ tổng thể <strong>0%</strong></h2><div className="learning-progress-track"><i /></div><p>Chưa có bài học nào được xuất bản.</p><div className="learning-overview-stats"><div><b>0</b><span>Hoàn thành</span></div><div><b>0</b><span>Đang học</span></div><div><b>0</b><span>Chưa bắt đầu</span></div><div><b>0 XP</b><span>XP đạt được</span></div></div></div>
         </section>
-        <section className="learning-v2-card learning-route-card"><header><TrackIcon size={18}/><h3>Giới thiệu lộ trình</h3></header><p>{isPerception ? "Từ nền tảng thị giác máy tính, hình học 3D và deep learning đến VLM, VLA cho Humanoid." : "Từ toán học robot, điều khiển và ROS 2 đến MuJoCo, sim-to-real và triển khai phần cứng."}</p><div className="curriculum-count"><b>3</b><span>phases</span><b>15</b><span>modules</span></div><button onClick={() => onOpenRoadmap(track)}>Xem Roadmap chi tiết <ArrowRight size={15}/></button></section>
-        <section className="learning-v2-card learning-quick-card"><header><CircleGauge size={18}/><h3>Thống kê nhanh</h3></header><dl><div><dt>Module trong lộ trình</dt><dd>15</dd></div><div><dt>Bài học đã xuất bản</dt><dd>0</dd></div><div><dt>Tổng thời gian học</dt><dd>0 phút</dd></div><div><dt>XP hiện tại</dt><dd>0 XP</dd></div></dl></section>
+        <section className="learning-v2-card learning-route-card"><header><TrackIcon size={18}/><h3>Giới thiệu lộ trình</h3></header><p>{isPerception ? "Từ nền tảng thị giác máy tính, hình học 3D và deep learning đến VLM, VLA cho Humanoid." : "Từ Linux, Python, C++ và cơ học robot đến control, embedded, simulation, ROS 2 và triển khai humanoid."}</p><div className="curriculum-count"><b>{phaseCount}</b><span>phases</span><b>{moduleCount}</b><span>modules</span></div><button onClick={() => onOpenRoadmap(track)}>Xem Roadmap chi tiết <ArrowRight size={15}/></button></section>
+        <section className="learning-v2-card learning-quick-card"><header><CircleGauge size={18}/><h3>Thống kê nhanh</h3></header><dl><div><dt>Module trong lộ trình</dt><dd>{moduleCount}</dd></div><div><dt>Bài học đã xuất bản</dt><dd>0</dd></div><div><dt>Tổng thời gian học</dt><dd>0 phút</dd></div><div><dt>XP hiện tại</dt><dd>0 XP</dd></div></dl></section>
       </div>
 
       <div className="learning-v2-body">
         <section className="learning-modules">
-          <header><div><h2>Các Module</h2><span>3 phases · {modules.length} modules</span></div></header>
+          <header><div><h2>Các Module</h2><span>{phaseCount} phases · {moduleCount} modules</span></div></header>
           <div className="learning-phase-list">
             {phases.map((phase, phaseIndex) => (
               <section className="learning-phase" key={phase.phase}>
                 <header><div><span>{phase.phase}</span></div><small>{phase.stages.length} modules</small></header>
                 <div className="learning-module-list">
                   {phase.stages.map((stage, stageIndex) => {
-                    const moduleNumber = phaseIndex * 5 + stageIndex + 1;
+                    const moduleNumber = phases.slice(0, phaseIndex).reduce((total, item) => total + item.stages.length, 0) + stageIndex + 1;
                     const ModuleIcon = getModuleIcon(track, moduleNumber - 1);
                     return <article key={stage[0]}>
                       <div className="module-icon"><ModuleIcon size={19}/></div>
@@ -403,13 +432,15 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
   const [track, setTrack] = useState<"perception" | "control">(initialTrack);
   const isPerception = track === "perception";
   const phases = isPerception ? perceptionRoadmap : controlRoadmap;
+  const moduleCount = phases.reduce((total, phase) => total + phase.stages.length, 0);
+  const phaseCount = phases.length;
   const TrackIcon = isPerception ? Eye : Gamepad2;
 
   return (
     <section className={`roadmap-workspace roadmap-${track}`}>
       <header className="roadmap-header">
         <div><span>ROBOLEARN CURRICULUM</span><h1>Roadmap</h1><p>Lộ trình kiến thức từ nền tảng đến hệ thống Humanoid hoàn chỉnh.</p></div>
-        <div className="roadmap-summary"><b>0%</b><span>Chưa bắt đầu</span><small>0 / 15 giai đoạn</small></div>
+        <div className="roadmap-summary"><b>0%</b><span>Chưa bắt đầu</span><small>0 / {moduleCount} giai đoạn</small></div>
       </header>
 
       <div className="roadmap-tabs" role="tablist" aria-label="Chọn hướng học">
@@ -431,7 +462,7 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
                 <header><div><span>0{phaseIndex + 1}</span><h2>{phase.phase}</h2></div></header>
                 <div className="roadmap-stage-row">
                   {phase.stages.map((stage, stageIndex) => {
-                    const number = phaseIndex * 5 + stageIndex + 1;
+                    const number = phases.slice(0, phaseIndex).reduce((total, item) => total + item.stages.length, 0) + stageIndex + 1;
                     const ModuleIcon = getModuleIcon(track, number - 1);
                     return (
                       <article className="roadmap-stage" key={stage[0]}>
@@ -451,7 +482,7 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
           <footer className="roadmap-bottom">
             <div className="roadmap-orb"><TrackIcon size={25}/></div>
             <div><h2>Đầu ra của lộ trình</h2><p>{isPerception ? "Có thể xây pipeline perception đa camera, hiểu cảnh 3D, tích hợp VLM và huấn luyện VLA cho humanoid." : "Có thể mô phỏng, lập kế hoạch, điều khiển toàn thân và triển khai hệ thống trên humanoid thật."}</p></div>
-            <div className="roadmap-pill"><b>15</b><span>giai đoạn</span></div>
+            <div className="roadmap-pill"><b>{moduleCount}</b><span>giai đoạn</span></div>
           </footer>
         </div>
 
@@ -459,7 +490,7 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
           <section className="roadmap-side-card progress-overview">
             <header><CircleGauge size={18}/><h3>Tiến độ tổng thể</h3></header>
             <div className="roadmap-ring"><b>0%</b></div>
-            <p><span>Đã hoàn thành</span><b>0 / 15 giai đoạn</b></p>
+            <p><span>Đã hoàn thành</span><b>0 / {moduleCount} giai đoạn</b></p>
             <small>Tiến độ sẽ tự cập nhật từ các bài học thật.</small>
           </section>
 
@@ -478,7 +509,7 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
 
           <section className="roadmap-side-card track-snapshot">
             <header><Target size={18}/><h3>Tổng quan track</h3></header>
-            <div><b>3</b><span>Phase</span></div><div><b>15</b><span>Giai đoạn</span></div><div><b>0</b><span>Đã học</span></div>
+            <div><b>{phaseCount}</b><span>Phase</span></div><div><b>{moduleCount}</b><span>Giai đoạn</span></div><div><b>0</b><span>Đã học</span></div>
           </section>
 
           <section className="roadmap-side-card competency-card">

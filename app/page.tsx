@@ -71,11 +71,11 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
           <label className="login-field">
             <span>Username</span>
-            <div><i>◎</i><input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Nhập tên đăng nhập" autoComplete="username" aria-label="Username" /></div>
+            <div><i className="user-icon" aria-hidden="true" /><input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Nhập tên đăng nhập" autoComplete="username" aria-label="Username" /></div>
           </label>
           <label className="login-field">
             <span>Password</span>
-            <div><i>▣</i><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Nhập mật khẩu" autoComplete="current-password" aria-label="Password" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Hiện hoặc ẩn mật khẩu">{showPassword ? "◉" : "⊘"}</button></div>
+            <div><i className="lock-icon" aria-hidden="true" /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Nhập mật khẩu" autoComplete="current-password" aria-label="Password" /><button className={`password-eye ${showPassword ? "visible" : ""}`} type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}><span aria-hidden="true" /></button></div>
           </label>
 
           <div className="login-options">

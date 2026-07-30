@@ -115,8 +115,11 @@ button { border: 0; cursor: pointer; color: inherit; }
 .login-options label button { width:16px; height:16px; display:grid; place-items:center; border:1px solid #535d70; border-radius:4px; background:#0a1020; color:white; font-size:8px; }
 .login-options label button.checked { border-color:#7257ff; background:linear-gradient(145deg,#8b5cff,#6138ee); box-shadow:0 0 12px #704cff66; }
 .login-options > button { background:transparent; color:#8b6cff; font-size:8.5px; }
+.login-options > span { color:#70798a; font-size:7px; }
+.login-error { margin:-4px 0 12px; padding:9px 11px; border:1px solid #ff5e7d55; border-radius:8px; background:#ff456914; color:#ff91a6; font-size:8px; }
 .sign-in { width:100%; height:49px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; border-radius:10px; color:white; background:linear-gradient(100deg,#7a27f2,#504cff 56%,#2989f2); font-size:11px; font-weight:700; box-shadow:0 10px 28px #4d3fff42; transition:.2s ease; }
 .sign-in:hover { transform:translateY(-1px); filter:brightness(1.08); box-shadow:0 14px 34px #4d3fff5c; }
+.sign-in:disabled { opacity:.48; cursor:not-allowed; transform:none; filter:none; }
 .sign-in > span { justify-self:end; margin-right:9px; font-size:15px; }
 .sign-in i { justify-self:end; margin-right:12px; padding:3px 5px; border-radius:4px; background:#ffffff16; color:#ffffff8c; font:6px var(--font-geist-mono); }
 .secure-line { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:9px; margin:19px 30%; white-space:nowrap; color:#6f7788; font-size:7px; }
@@ -131,6 +134,10 @@ button { border: 0; cursor: pointer; color: inherit; }
 .demo-note { margin:14px 0 0; text-align:center; color:#5f6879; font-size:6.5px; letter-spacing:.08em; text-transform:uppercase; }
 .login-quote { position:absolute; z-index:2; left:0; right:0; bottom:0; height:48px; display:flex; align-items:center; justify-content:center; gap:8px; border-top:1px solid #ffffff0b; background:#02050cc7; color:#838c9c; font-size:9px; backdrop-filter:blur(15px); }
 .login-quote span { color:#725cff; font-size:8px; }
+.auth-loading { width:100vw; height:100vh; display:grid; place-content:center; justify-items:center; gap:14px; color:#7e8799; background:radial-gradient(circle at 50% 45%,#17142f,#040710 55%); }
+.auth-loading .login-logo { animation:authPulse 1.2s ease-in-out infinite alternate; }
+.auth-loading p { font-size:9px; letter-spacing:.08em; }
+@keyframes authPulse { to { transform:rotate(-5deg) scale(1.08); box-shadow:0 0 38px #673aff99; } }
 
 .app-shell {
   display: grid;

@@ -1,10 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username, password, remember }),
+      });
+      const result = await response.json() as { ok: boolean; message?: string };
+      if (!response.ok) {
+        setError(result.message ?? "Không thể đăng nhập.");
+        return;
+      }
+      onLogin();
+    } catch {
+      setError("Không thể kết nối tới máy chủ.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="login-page">
@@ -35,7 +62,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
       </section>
 
       <section className="login-zone">
-        <form className="login-card" onSubmit={(event) => { event.preventDefault(); onLogin(); }}>
+        <form className="login-card" onSubmit={submit}>
           <div className="login-card-head">
             <span className="secure-chip">● PRIVATE WORKSPACE</span>
             <h2>Welcome back<span>.</span></h2>
@@ -44,19 +71,20 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
           <label className="login-field">
             <span>Username</span>
-            <div><i>◎</i><input defaultValue="minhtuan" autoComplete="username" aria-label="Username" /></div>
+            <div><i>◎</i><input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Nhập tên đăng nhập" autoComplete="username" aria-label="Username" /></div>
           </label>
           <label className="login-field">
             <span>Password</span>
-            <div><i>▣</i><input type={showPassword ? "text" : "password"} defaultValue="robotics2026" autoComplete="current-password" aria-label="Password" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Hiện hoặc ẩn mật khẩu">{showPassword ? "◉" : "⊘"}</button></div>
+            <div><i>▣</i><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Nhập mật khẩu" autoComplete="current-password" aria-label="Password" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Hiện hoặc ẩn mật khẩu">{showPassword ? "◉" : "⊘"}</button></div>
           </label>
 
           <div className="login-options">
             <label><button type="button" className={remember ? "checked" : ""} onClick={() => setRemember(!remember)}>{remember ? "✓" : ""}</button> Remember me</label>
-            <button type="button">Forgot password?</button>
+            <span>Account managed by owner</span>
           </div>
 
-          <button className="sign-in" type="submit"><span>→</span> Sign In <i>ENTER ↵</i></button>
+          {error && <div className="login-error" role="alert">! &nbsp;{error}</div>}
+          <button className="sign-in" type="submit" disabled={loading || !username || !password}><span>→</span> {loading ? "Checking..." : "Sign In"} <i>ENTER ↵</i></button>
           <div className="secure-line"><span /><b>♢</b> Secure & Private<span /></div>
 
           <div className="login-benefits">
@@ -64,7 +92,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             <div><span>♢</span><p><b>Instant Feedback</b><small>Test, evaluate, improve</small></p></div>
             <div><span>▥</span><p><b>Track Progress</b><small>Own your learning path</small></p></div>
           </div>
-          <p className="demo-note">Prototype access · Click Sign In to explore</p>
+          <p className="demo-note">Private access · Accounts are issued by the owner only</p>
         </form>
       </section>
       <footer className="login-quote">“The best way to predict the future is to invent it.” <span>— Alan Kay</span></footer>
@@ -107,6 +135,7 @@ const codeLines = [
 
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [tab, setTab] = useState<"lesson" | "notes">("lesson");
   const [bottomTab, setBottomTab] = useState<"tests" | "output">("tests");
   const [running, setRunning] = useState(false);
@@ -114,6 +143,13 @@ export default function Home() {
   const [focus, setFocus] = useState(false);
   const [streak, setStreak] = useState(7);
   const greeting = useMemo(() => (new Date().getHours() < 12 ? "Chào buổi sáng" : "Tiếp tục nào"), []);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((response) => setAuthenticated(response.ok))
+      .catch(() => setAuthenticated(false))
+      .finally(() => setCheckingSession(false));
+  }, []);
 
   const runTests = () => {
     setRunning(true);
@@ -125,6 +161,7 @@ export default function Home() {
     }, 900);
   };
 
+  if (checkingSession) return <main className="auth-loading"><div className="login-logo"><span>R</span></div><p>Securing your workspace...</p></main>;
   if (!authenticated) return <LoginScreen onLogin={() => setAuthenticated(true)} />;
 
   return (
@@ -147,7 +184,7 @@ export default function Home() {
           <button className="search"><span>⌕</span> Tìm bài học... <kbd>⌘ K</kbd></button>
           <div className="streak" title="Chuỗi ngày học"><span>♨</span><b>{streak}</b></div>
           <button className="notification" aria-label="Thông báo">●</button>
-          <div className="avatar">AN</div>
+          <button className="avatar" title="Đăng xuất" onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); setAuthenticated(false); }}>AN</button>
         </div>
       </header>
 

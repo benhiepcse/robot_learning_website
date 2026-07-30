@@ -586,6 +586,7 @@ code { font-family:var(--font-geist-mono); }
 @media(max-width:1550px){.learning-v2 .learning-header{padding-right:180px}.learning-v2 .learning-header:after{width:275px;height:142px;background-size:285px auto}.learning-v2-top{grid-template-columns:minmax(510px,1.45fr) minmax(245px,.72fr) minmax(225px,.65fr)}.learning-v2-body{grid-template-columns:minmax(0,1fr) 275px}.learning-v2 .learning-module-list article{grid-template-columns:38px minmax(0,1fr) 76px 105px 32px}}
 
 .roadmap-stage .stage-top{justify-content:flex-start;gap:8px}.roadmap-stage .stage-top>span{flex:0 0 30px;width:30px;height:30px}.roadmap-stage .stage-top>b{color:var(--track);font-size:11px}.roadmap-stage .stage-top>small{margin-left:auto}
+.roadmap-stage-openable{cursor:pointer}.roadmap-stage-openable:hover{transform:translateY(-3px);border-color:rgba(var(--track-rgb),.52);box-shadow:0 18px 44px rgba(var(--track-rgb),.12)}.roadmap-stage-openable:focus-visible{outline:2px solid var(--track);outline-offset:3px}
 .roadmap-stage-row .stage-arrow{display:none}
 
 /* Functional Settings workspace */

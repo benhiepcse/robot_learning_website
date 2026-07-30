@@ -508,9 +508,9 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
   );
 }
 
-function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "perception" | "control") => void }) {
-  const [track, setTrack] = useState<"perception" | "control">("perception");
-  const [selectedModule, setSelectedModule] = useState<CurriculumModule | null>(null);
+function LearningWorkspace({ onOpenRoadmap, initialModule = null, onModuleClosed }: { onOpenRoadmap: (track: "perception" | "control") => void; initialModule?: CurriculumModule | null; onModuleClosed?: () => void }) {
+  const [track, setTrack] = useState<"perception" | "control">(initialModule?.track ?? "perception");
+  const [selectedModule, setSelectedModule] = useState<CurriculumModule | null>(initialModule);
   const isPerception = track === "perception";
   const phases = isPerception ? perceptionRoadmap : controlRoadmap;
   const modules = phases.flatMap((phase, phaseIndex) =>
@@ -527,7 +527,7 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
   const moduleCount = modules.length;
   const TrackIcon = isPerception ? Eye : Gamepad2;
 
-  if (selectedModule) return <ModuleLearningWorkspace module={selectedModule} onBack={() => setSelectedModule(null)} />;
+  if (selectedModule) return <ModuleLearningWorkspace module={selectedModule} onBack={() => { setSelectedModule(null); onModuleClosed?.(); }} />;
 
   return (
     <section className={`learning-workspace learning-v2 learning-${track}`}>
@@ -580,7 +580,7 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
   );
 }
 
-function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "perception" | "control" }) {
+function RoadmapWorkspace({ initialTrack = "perception", onOpenModule }: { initialTrack?: "perception" | "control"; onOpenModule?: (module: CurriculumModule) => void }) {
   const [track, setTrack] = useState<"perception" | "control">(initialTrack);
   const isPerception = track === "perception";
   const phases = isPerception ? perceptionRoadmap : controlRoadmap;
@@ -617,7 +617,7 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
                     const number = phases.slice(0, phaseIndex).reduce((total, item) => total + item.stages.length, 0) + stageIndex + 1;
                     const ModuleIcon = getModuleIcon(track, number - 1);
                     return (
-                      <article className="roadmap-stage" key={stage[0]}>
+                      <article className="roadmap-stage roadmap-stage-openable" key={stage[0]} onClick={() => onOpenModule?.({ track, phase: phase.phase, title: stage[0], description: stage[1], moduleNumber: number })}>
                         <div className="stage-top"><span><ModuleIcon size={16}/></span><b>{String(number).padStart(2, "0")}</b><small>PLANNED</small></div>
                         <h3>{stage[0]}</h3>
                         <p>{stage[1]}</p>
@@ -656,7 +656,7 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
             <div className="next-stage-number">1</div>
             <div><b>{phases[0].stages[0][0]}</b><small>{phases[0].stages[0][1]}</small></div>
             <i><b style={{ width: "0%" }}/></i><span>0%</span>
-            <button>Khám phá giai đoạn <ArrowRight size={15}/></button>
+            <button onClick={() => onOpenModule?.({ track, phase: phases[0].phase, title: phases[0].stages[0][0], description: phases[0].stages[0][1], moduleNumber: 1 })}>Khám phá module <ArrowRight size={15}/></button>
           </section>
 
           <section className="roadmap-side-card track-snapshot">
@@ -1321,6 +1321,7 @@ function SettingsWorkspace({
 function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [roadmapTrack, setRoadmapTrack] = useState<"perception" | "control">("perception");
+  const [selectedLearningModule, setSelectedLearningModule] = useState<CurriculumModule | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState<DashboardTheme>("system");
@@ -1446,9 +1447,9 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
         )}
 
         {activeNav === "Learning" ? (
-          <LearningWorkspace onOpenRoadmap={(track) => { setRoadmapTrack(track); setActiveNav("Roadmap"); }} />
+          <LearningWorkspace initialModule={selectedLearningModule} onModuleClosed={() => setSelectedLearningModule(null)} onOpenRoadmap={(track) => { setRoadmapTrack(track); setActiveNav("Roadmap"); }} />
         ) : activeNav === "Roadmap" ? (
-          <RoadmapWorkspace initialTrack={roadmapTrack} />
+          <RoadmapWorkspace initialTrack={roadmapTrack} onOpenModule={(module) => { setSelectedLearningModule(module); setActiveNav("Learning"); }} />
         ) : activeNav === "Projects" ? (
           <ProjectsWorkspace />
         ) : activeNav === "Collaboration" ? (

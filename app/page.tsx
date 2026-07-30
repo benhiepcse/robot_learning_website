@@ -362,9 +362,13 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
                   <p>Tiến độ sẽ được tính từ số bài hoàn thành trên tổng số bài đã xuất bản.</p>
                 </section>
                 <section className="dash-card heatmap-card empty-heatmap">
-                  <h2>Lịch sử học tập <span>(Heatmap)</span></h2>
-                  <div className="empty-heat-grid">{Array.from({ length: 70 }, (_, index) => <i key={index} />)}</div>
-                  <p>Chưa có phiên học nào được ghi nhận.</p>
+                  <div className="heatmap-month-head">
+                    <div><h2>Lịch sử học tập <span>(Heatmap)</span></h2><b>{new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(monthCursor)}</b></div>
+                    <div><button onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))} aria-label="Xem tháng trước">‹</button><button onClick={() => setMonthCursor(new Date())}>Tháng này</button><button onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))} aria-label="Xem tháng sau">›</button></div>
+                  </div>
+                  <div className="heatmap-weekdays">{["T2","T3","T4","T5","T6","T7","CN"].map((day) => <b key={day}>{day}</b>)}</div>
+                  <div className="heatmap-month-grid">{calendar.map((cell, index) => <i key={index} className={`${cell.muted ? "outside" : "level-0"} ${isToday(cell.date) ? "today-cell" : ""}`} title={`${new Intl.DateTimeFormat("vi-VN", { dateStyle: "full" }).format(cell.date)} · 0 phút học`}>{!cell.muted && <span>{cell.day}</span>}</i>)}</div>
+                  <div className="heatmap-footer"><p>Chưa có phiên học nào được ghi nhận.</p><div className="heatmap-scale"><span>Không học</span><i className="level-0"/><i className="level-1"/><i className="level-2"/><i className="level-3"/><i className="level-4"/><span>Chuyên sâu</span></div></div>
                 </section>
               </div>
 

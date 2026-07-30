@@ -432,8 +432,85 @@ function getModuleIcon(track: "perception" | "control", index: number) {
   return (track === "perception" ? perceptionModuleIcons : controlModuleIcons)[index];
 }
 
+type LessonKind = "Coding" | "Control" | "Quiz" | "Simulation" | "ROS2";
+type CurriculumModule = { track: "perception" | "control"; phase: string; title: string; description: string; moduleNumber: number };
+
+const chapterThemes = [
+  "Nền tảng và thuật ngữ cốt lõi",
+  "Mô hình, phương pháp và công cụ",
+  "Phân tích và triển khai hệ thống",
+  "Thực hành, kiểm thử và đánh giá",
+  "Tích hợp vào Humanoid Robot",
+];
+const lessonThemes = [
+  "Tổng quan và mục tiêu", "Khái niệm nền tảng", "Mô hình toán học", "Kiến trúc hệ thống", "Công cụ và môi trường",
+  "Quy trình triển khai", "Thực hành có hướng dẫn", "Kiểm thử và đánh giá", "Tích hợp ROS 2", "Bài tổng kết chương",
+];
+
+function lessonKind(track: "perception" | "control", chapterIndex: number, lessonIndex: number): LessonKind {
+  const perceptionKinds: LessonKind[] = ["Coding", "Quiz", "Simulation", "ROS2", "Control"];
+  const controlKinds: LessonKind[] = ["Control", "Simulation", "Coding", "ROS2", "Quiz"];
+  return (track === "perception" ? perceptionKinds : controlKinds)[(chapterIndex + lessonIndex) % 5];
+}
+
+function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule; onBack: () => void }) {
+  const [openChapter, setOpenChapter] = useState(0);
+  const [activeLesson, setActiveLesson] = useState({ chapter: 0, lesson: 0 });
+  const chapters = chapterThemes.map((theme, chapterIndex) => ({
+    title: `Chương ${chapterIndex + 1}: ${theme}`,
+    lessons: lessonThemes.map((lesson, lessonIndex) => ({ title: `${lesson}: ${module.title}`, kind: lessonKind(module.track, chapterIndex, lessonIndex) })),
+  }));
+  const selected = chapters[activeLesson.chapter].lessons[activeLesson.lesson];
+
+  return (
+    <section className={`module-learning-workspace module-learning-${module.track}`}>
+      <header className="module-learning-header">
+        <button onClick={onBack} className="module-back"><PanelLeftOpen size={18}/> Tất cả module</button>
+        <div><span>{module.track === "perception" ? "AI PERCEPTION TRACK" : "CONTROL & SIMULATION TRACK"}</span><h1>{module.title}</h1><p>{module.phase} · Module {String(module.moduleNumber).padStart(2, "0")}</p></div>
+        <div className="module-draft-status"><b>Khung chương trình</b><span>Chưa xuất bản · 5 chương · 50 bài mẫu</span></div>
+      </header>
+      <div className="module-learning-grid">
+        <aside className="module-chapter-rail">
+          <div className="module-rail-intro"><b>Nội dung module</b><span>0 / 50 bài đã xuất bản</span></div>
+          {chapters.map((chapter, chapterIndex) => (
+            <section className="module-chapter" key={chapter.title}>
+              <button className="module-chapter-toggle" onClick={() => setOpenChapter(openChapter === chapterIndex ? -1 : chapterIndex)}>
+                <span><b>{chapter.title}</b><small>10 bài mẫu · Chưa xuất bản</small></span>
+                {openChapter === chapterIndex ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+              </button>
+              {openChapter === chapterIndex && <div className="module-lesson-list">
+                {chapter.lessons.map((lesson, lessonIndex) => (
+                  <button key={`${chapterIndex}-${lessonIndex}`} className={activeLesson.chapter === chapterIndex && activeLesson.lesson === lessonIndex ? "active" : ""} onClick={() => setActiveLesson({ chapter: chapterIndex, lesson: lessonIndex })}>
+                    <span>{lessonIndex + 1}</span><p><b>{lesson.title}</b><small>Khung nội dung</small></p><em className={`lesson-kind kind-${lesson.kind.toLowerCase()}`}>{lesson.kind}</em>
+                  </button>
+                ))}
+              </div>}
+            </section>
+          ))}
+        </aside>
+        <main className="module-lesson-stage">
+          <div className="lesson-breadcrumb">Learning <i>›</i> {module.title} <i>›</i> Chương {activeLesson.chapter + 1}</div>
+          <header><div><span>Bài {activeLesson.lesson + 1}</span><h2>{selected.title}</h2></div><em className={`lesson-kind kind-${selected.kind.toLowerCase()}`}>{selected.kind}</em></header>
+          <nav><button className="active">Nội dung</button><button disabled>Ví dụ</button><button disabled>Tài liệu</button><button disabled>Bài tập</button></nav>
+          <section className="lesson-draft-canvas">
+            <div className="lesson-draft-icon"><FileText size={28}/></div><span>NỘI DUNG ĐANG CHỜ BIÊN SOẠN</span><h3>Khung bài học đã sẵn sàng</h3>
+            <p>Bài này hiện chỉ có tên và phân loại <b>{selected.kind}</b>. Lý thuyết, mã nguồn, mô phỏng, câu hỏi và tài liệu sẽ chỉ xuất hiện sau khi bạn cung cấp dữ liệu thật.</p>
+            <dl><div><dt>Module</dt><dd>{module.title}</dd></div><div><dt>Chương</dt><dd>{activeLesson.chapter + 1} / 5</dd></div><div><dt>Bài</dt><dd>{activeLesson.lesson + 1} / 10</dd></div><div><dt>Trạng thái</dt><dd>Chưa xuất bản</dd></div></dl>
+          </section>
+        </main>
+        <aside className="module-context-panel">
+          <section><header><Info size={17}/><h3>Thông tin bài học</h3></header><dl><div><dt>Phân loại</dt><dd><em className={`lesson-kind kind-${selected.kind.toLowerCase()}`}>{selected.kind}</em></dd></div><div><dt>Tiến độ</dt><dd>Chưa bắt đầu</dd></div><div><dt>Thời lượng</dt><dd>Chưa xác định</dd></div><div><dt>XP</dt><dd>Chưa thiết lập</dd></div></dl></section>
+          <section><header><FileText size={17}/><h3>Tài liệu liên quan</h3></header><div className="module-honest-empty">Chưa có tài liệu được tải lên.</div></section>
+          <section><header><PencilLine size={17}/><h3>Ghi chú</h3></header><div className="module-honest-empty">Chưa có ghi chú cho bài học này.</div></section>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
 function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "perception" | "control") => void }) {
   const [track, setTrack] = useState<"perception" | "control">("perception");
+  const [selectedModule, setSelectedModule] = useState<CurriculumModule | null>(null);
   const isPerception = track === "perception";
   const phases = isPerception ? perceptionRoadmap : controlRoadmap;
   const modules = phases.flatMap((phase, phaseIndex) =>
@@ -449,6 +526,8 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
   const phaseCount = phases.length;
   const moduleCount = modules.length;
   const TrackIcon = isPerception ? Eye : Gamepad2;
+
+  if (selectedModule) return <ModuleLearningWorkspace module={selectedModule} onBack={() => setSelectedModule(null)} />;
 
   return (
     <section className={`learning-workspace learning-v2 learning-${track}`}>
@@ -477,12 +556,12 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
                   {phase.stages.map((stage, stageIndex) => {
                     const moduleNumber = phases.slice(0, phaseIndex).reduce((total, item) => total + item.stages.length, 0) + stageIndex + 1;
                     const ModuleIcon = getModuleIcon(track, moduleNumber - 1);
-                    return <article key={stage[0]}>
+                    return <article key={stage[0]} className="openable-module" onClick={() => setSelectedModule({ track, phase: phase.phase, title: stage[0], description: stage[1], moduleNumber })}>
                       <div className="module-icon"><ModuleIcon size={19}/></div>
                       <div><span>MODULE {String(moduleNumber).padStart(2, "0")}</span><h3>{stage[0]}</h3><p>{stage[1]}</p></div>
-                      <div className="module-data"><b>0 bài</b><span>Chưa xuất bản</span></div>
+                      <div className="module-data"><b>50 bài mẫu</b><span>Chưa xuất bản</span></div>
                       <div className="module-progress"><i /><b>0%</b></div>
-                      <button aria-label={`Mở module ${stage[0]}`} disabled><ArrowRight size={17}/></button>
+                      <button aria-label={`Mở module ${stage[0]}`} onClick={(event) => { event.stopPropagation(); setSelectedModule({ track, phase: phase.phase, title: stage[0], description: stage[1], moduleNumber }); }}><ArrowRight size={17}/></button>
                     </article>;
                   })}
                 </div>

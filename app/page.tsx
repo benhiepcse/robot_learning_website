@@ -19,7 +19,9 @@ import {
   Cog,
   Combine,
   Compass,
+  ChartNoAxesCombined,
   Cpu,
+  Database,
   Eye,
   FlaskConical,
   Footprints,
@@ -288,26 +290,45 @@ const premiumDashboardNav = [
 ] as const;
 
 const perceptionRoadmap = [
-  { phase: "Phase 1 · Foundations", caption: "Toán, lập trình và thị giác máy tính nền tảng", stages: [
-    ["Programming & Math", "Python, C++, Linux, Linear Algebra"],
-    ["Image Processing", "OpenCV, filtering, features, geometry"],
-    ["Camera Geometry", "Calibration, projection, distortion"],
-    ["Stereo & RGB-D", "Depth, disparity, reconstruction"],
-    ["3D Representation", "Point clouds, meshes, coordinate frames"],
+  { phase: "Phase 1 · Engineering Foundations", caption: "Lập trình, toán học và kỹ năng xây dựng hệ thống perception", stages: [
+    ["Programming for Perception", "Python, C++, Modern C++, NumPy, OpenCV and PyTorch tooling"],
+    ["Mathematical Foundations", "Linear algebra, calculus, probability, optimization, SO(3) and SE(3)"],
+    ["Software Engineering", "Linux, Git, CMake, Docker, testing, debugging, profiling and reproducibility"],
   ]},
-  { phase: "Phase 2 · Robot Perception", caption: "Hiểu con người, vật thể và không gian 3D", stages: [
-    ["Detection & Segmentation", "Objects, instances, semantic scenes"],
-    ["Pose & Human Understanding", "6D pose, keypoints, body and hands"],
-    ["Multi-Camera Fusion", "Temporal alignment, tracking, sensor fusion"],
-    ["SLAM & Localization", "Visual odometry, mapping, loop closure"],
-    ["Deep Vision Models", "CNN, Transformer, self-supervised learning"],
+  { phase: "Phase 2 · Computer Vision & Cameras", caption: "Xử lý ảnh, mô hình camera, chiều sâu và biểu diễn không gian", stages: [
+    ["Computer Vision Fundamentals", "Images, color spaces, convolution, morphology and classical vision"],
+    ["Image Processing & Features", "Filtering, edges, corners, descriptors, matching, optical flow and OpenCV"],
+    ["Camera Geometry & Calibration", "Projection, intrinsics, extrinsics, distortion, epipolar geometry and calibration"],
+    ["Depth & Stereo Camera", "Stereo matching, disparity, RGB-D, depth sensors and 3D reconstruction"],
+    ["3D Geometry & Representation", "Coordinate frames, point clouds, voxels, meshes and transformations"],
   ]},
-  { phase: "Phase 3 · VLM → VLA", caption: "Từ nhìn–hiểu ngôn ngữ đến hành động robot", stages: [
-    ["Vision Transformers", "ViT, encoders, visual tokens"],
-    ["VLM Foundations", "Contrastive learning, grounding, captioning"],
-    ["Embodied Reasoning", "Spatial reasoning, memory, affordances"],
-    ["VLA & Policy Learning", "Action tokens, imitation, diffusion policy"],
-    ["Humanoid Integration", "Real-time pipeline, safety, deployment"],
+  { phase: "Phase 3 · Machine & Deep Learning", caption: "Dữ liệu, mô hình học máy và nhận thức thị giác hiện đại", stages: [
+    ["Data, Datasets & Evaluation", "Collection, annotation, augmentation, splits, metrics, bias and experiment tracking"],
+    ["Machine Learning", "Regression, classification, clustering, dimensionality reduction and model validation"],
+    ["Deep Learning", "Neural networks, CNNs, optimization, regularization, transfer and self-supervised learning"],
+    ["Detection & Segmentation", "Object detection, semantic, instance and panoptic segmentation"],
+    ["Tracking & Temporal Vision", "Single/multi-object tracking, optical flow, video understanding and temporal models"],
+    ["Pose & Human Understanding", "2D/3D keypoints, 6D pose, body, hand and human motion understanding"],
+  ]},
+  { phase: "Phase 4 · Language, Transformers & Multimodal AI", caption: "Từ ngôn ngữ tự nhiên đến mô hình kết hợp thị giác–ngôn ngữ", stages: [
+    ["Natural Language Processing", "Tokenization, embeddings, sequence modeling, text representation and evaluation"],
+    ["Transformers", "Attention, encoder-decoder, positional encoding, ViT and multimodal transformers"],
+    ["Large Language Models", "Pretraining, instruction tuning, prompting, retrieval and efficient adaptation"],
+    ["Multimodal Learning", "Contrastive learning, joint embeddings, alignment, fusion and cross-modal reasoning"],
+    ["Vision-Language Models", "Captioning, VQA, grounding, referring expressions and open-vocabulary perception"],
+  ]},
+  { phase: "Phase 5 · Robotics Perception", caption: "Đưa nhận thức 2D/3D vào hệ thống robot đa cảm biến", stages: [
+    ["Robotics Foundations", "Frames, kinematics basics, robot sensors, timing and perception-control interfaces"],
+    ["3D Perception", "Point cloud processing, registration, 3D detection, scene understanding and reconstruction"],
+    ["Sensor Fusion", "Camera-IMU-LiDAR fusion, synchronization, calibration, Bayesian filtering and uncertainty"],
+    ["SLAM & Localization", "Visual odometry, mapping, loop closure, pose graphs and localization"],
+    ["ROS 2 & Simulation", "ROS 2, TF2, sensor messages, rosbag, RViz2, Gazebo, Isaac Sim and digital twins"],
+  ]},
+  { phase: "Phase 6 · Embodied AI, VLA & Deployment", caption: "Từ nhận thức đa phương thức đến chính sách hành động trên humanoid", stages: [
+    ["Reinforcement Learning", "MDP, value and policy methods, PPO, SAC, model-based and safe RL"],
+    ["Imitation & Policy Learning", "Behavior cloning, offline RL, diffusion policy, demonstrations and action prediction"],
+    ["Vision-Language-Action", "Action tokens, embodied reasoning, affordances, memory and language-conditioned control"],
+    ["Humanoid Integration & Deployment", "Real-time inference, optimization, edge deployment, monitoring, safety and evaluation"],
   ]},
 ];
 
@@ -361,9 +382,12 @@ const controlRoadmap = [
 ];
 
 const perceptionModuleIcons = [
-  Code2, Image, Camera, Box, Layers3,
-  ScanSearch, PersonStanding, RadioTower, Navigation, BrainCircuit,
-  Boxes, MessageSquareText, Waypoints, Bot, Rocket,
+  Code2, Sigma, GitBranch,
+  Eye, Image, Camera, Box, Layers3,
+  Database, ChartNoAxesCombined, BrainCircuit, ScanSearch, Target, RadioTower,
+  MessageSquareText, Network, Cpu, Boxes, Bot,
+  Cog, Move3d, Activity, Navigation, Workflow,
+  Sparkles, Hand, Waypoints, Rocket,
 ];
 
 const controlModuleIcons = [

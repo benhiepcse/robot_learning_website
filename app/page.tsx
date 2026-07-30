@@ -6,6 +6,7 @@ import {
   BriefcaseBusiness,
   ArrowRight,
   CircleGauge,
+  CheckCircle2,
   Eye,
   Gamepad2,
   History,
@@ -13,6 +14,7 @@ import {
   Lightbulb,
   Library,
   Map,
+  RefreshCw,
   Sparkles,
   Target,
   Settings,
@@ -287,69 +289,67 @@ const controlRoadmap = [
   ]},
 ];
 
-const perceptionLearningModules = [
-  ["Computer Vision Foundations", "Images, pixels, filtering, features and OpenCV"],
-  ["Camera Geometry", "Projection, calibration, distortion and coordinate frames"],
-  ["Stereo & RGB-D Vision", "Disparity, depth and 3D reconstruction"],
-  ["3D Perception", "Point clouds, registration and scene understanding"],
-  ["Detection, Pose & Tracking", "Objects, humans, 6D pose and temporal tracking"],
-  ["Deep Learning for Vision", "CNN, Transformer and self-supervised learning"],
-  ["VLM & Embodied Reasoning", "Grounding, visual language and spatial reasoning"],
-  ["VLA & Humanoid Integration", "Action policies, imitation and real-time deployment"],
-];
-
-const controlLearningModules = [
-  ["Robotics Math", "Linear algebra, transforms, Lie groups and numerical methods"],
-  ["Robot Kinematics", "Forward/inverse kinematics and Jacobians"],
-  ["Robot Dynamics", "Rigid body dynamics, contacts and constraints"],
-  ["Planning & State Estimation", "Trajectories, search, Kalman filters and fusion"],
-  ["Classical & Optimal Control", "PID, state space, LQR and MPC"],
-  ["Whole-Body Motion", "Balance, locomotion and manipulation"],
-  ["ROS 2 & Simulation", "ROS 2, MuJoCo, Gazebo, Isaac Sim and URDF"],
-  ["RL, Sim-to-Real & Deployment", "Policy learning, adaptation, safety and hardware"],
-];
-
 function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "perception" | "control") => void }) {
   const [track, setTrack] = useState<"perception" | "control">("perception");
   const isPerception = track === "perception";
-  const modules = isPerception ? perceptionLearningModules : controlLearningModules;
+  const phases = isPerception ? perceptionRoadmap : controlRoadmap;
+  const modules = phases.flatMap((phase, phaseIndex) =>
+    phase.stages.map((stage, stageIndex) => ({
+      phase: phase.phase,
+      phaseCaption: phase.caption,
+      phaseIndex,
+      stageIndex,
+      title: stage[0],
+      description: stage[1],
+    })),
+  );
   const TrackIcon = isPerception ? Eye : Gamepad2;
 
   return (
-    <section className={`learning-workspace learning-${track}`}>
+    <section className={`learning-workspace learning-v2 learning-${track}`}>
       <header className="learning-header">
-        <div><span>LEARNING SPACE</span><h1>Learning <i>›</i> <em>{isPerception ? "AI Perception" : "Control & Simulation"}</em></h1><p>{isPerception ? "Học cách để Humanoid nhìn, hiểu và hành động trong thế giới thực." : "Học mô phỏng, lập kế hoạch và điều khiển chuyển động Humanoid."}</p></div>
+        <div><span>LEARNING SPACE</span><h1>Learning <i>›</i> <em>{isPerception ? "AI Perception" : "Control & Simulation"}</em></h1><p>{isPerception ? "Lộ trình học toàn diện về AI Perception cho Humanoid Robot." : "Lộ trình học toàn diện về điều khiển, mô phỏng và lập trình robot."}</p></div>
         <div className="learning-tabs" role="tablist"><button className={isPerception ? "active" : ""} onClick={() => setTrack("perception")}><Eye size={18}/>AI Perception</button><button className={!isPerception ? "active" : ""} onClick={() => setTrack("control")}><Gamepad2 size={18}/>Control & Simulation</button></div>
       </header>
 
-      <div className="learning-layout">
-        <div className="learning-primary">
-          <section className="learning-overview">
-            <div className="learning-zero-ring"><b>0%</b><span>Chưa bắt đầu</span></div>
-            <div className="learning-overview-copy"><span>{isPerception ? "AI PERCEPTION PROGRESS" : "CONTROL & SIMULATION PROGRESS"}</span><h2>Tiến độ học tập</h2><p>Tiến độ sẽ được tính sau khi các bài học đầu tiên được xuất bản.</p><div className="learning-overview-stats"><div><b>0</b><span>Hoàn thành</span></div><div><b>0</b><span>Đang học</span></div><div><b>0 XP</b><span>Đã nhận</span></div></div></div>
-          </section>
+      <div className="learning-v2-top">
+        <section className="learning-overview">
+          <div className="learning-zero-ring"><b>0%</b><span>Hoàn thành</span></div>
+          <div className="learning-overview-copy"><span>{isPerception ? "AI PERCEPTION PROGRESS" : "CONTROL & SIMULATION PROGRESS"}</span><h2>Tiến độ tổng thể <strong>0%</strong></h2><div className="learning-progress-track"><i /></div><p>Chưa có bài học nào được xuất bản.</p><div className="learning-overview-stats"><div><b>0</b><span>Hoàn thành</span></div><div><b>0</b><span>Đang học</span></div><div><b>0</b><span>Chưa bắt đầu</span></div><div><b>0 XP</b><span>XP đạt được</span></div></div></div>
+        </section>
+        <section className="learning-v2-card learning-route-card"><header><TrackIcon size={18}/><h3>Giới thiệu lộ trình</h3></header><p>{isPerception ? "Từ nền tảng thị giác máy tính, hình học 3D và deep learning đến VLM, VLA cho Humanoid." : "Từ toán học robot, điều khiển và ROS 2 đến MuJoCo, sim-to-real và triển khai phần cứng."}</p><div className="curriculum-count"><b>3</b><span>phases</span><b>15</b><span>modules</span></div><button onClick={() => onOpenRoadmap(track)}>Xem Roadmap chi tiết <ArrowRight size={15}/></button></section>
+        <section className="learning-v2-card learning-quick-card"><header><CircleGauge size={18}/><h3>Thống kê nhanh</h3></header><dl><div><dt>Module trong lộ trình</dt><dd>15</dd></div><div><dt>Bài học đã xuất bản</dt><dd>0</dd></div><div><dt>Tổng thời gian học</dt><dd>0 phút</dd></div><div><dt>XP hiện tại</dt><dd>0 XP</dd></div></dl></section>
+      </div>
 
-          <section className="learning-modules">
-            <header><div><h2>Các Module</h2><span>{modules.length} modules</span></div><p>Curriculum dự kiến · chưa có bài học được xuất bản</p></header>
-            <div className="learning-module-list">
-              {modules.map((module, index) => (
-                <article key={module[0]}>
-                  <div className="module-icon"><TrackIcon size={20}/></div>
-                  <div><span>MODULE {String(index + 1).padStart(2, "0")}</span><h3>{module[0]}</h3><p>{module[1]}</p></div>
-                  <div className="module-data"><b>0 bài</b><span>Chưa xuất bản</span></div>
-                  <div className="module-xp"><b>— XP</b><span>Chưa gán</span></div>
-                  <button aria-label={`Mở module ${module[0]}`} disabled><ArrowRight size={17}/></button>
-                </article>
-              ))}
-            </div>
-          </section>
-        </div>
+      <div className="learning-v2-body">
+        <section className="learning-modules">
+          <header><div><h2>Các Module</h2><span>3 phases · {modules.length} modules</span></div><p>Dữ liệu curriculum được đồng bộ trực tiếp với Roadmap</p></header>
+          <div className="learning-phase-list">
+            {phases.map((phase, phaseIndex) => (
+              <section className="learning-phase" key={phase.phase}>
+                <header><div><span>PHASE {phaseIndex + 1}</span><h3>{phase.phase.replace(/^Phase \d+ · /, "")}</h3></div><p>{phase.caption}</p><small>{phase.stages.length} modules</small></header>
+                <div className="learning-module-list">
+                  {phase.stages.map((stage, stageIndex) => {
+                    const moduleNumber = phaseIndex * 5 + stageIndex + 1;
+                    return <article key={stage[0]}>
+                      <div className="module-icon"><TrackIcon size={19}/></div>
+                      <div><span>MODULE {String(moduleNumber).padStart(2, "0")}</span><h3>{stage[0]}</h3><p>{stage[1]}</p></div>
+                      <div className="module-data"><b>0 bài</b><span>Chưa xuất bản</span></div>
+                      <div className="module-progress"><i /><b>0%</b></div>
+                      <button aria-label={`Mở module ${stage[0]}`} disabled><ArrowRight size={17}/></button>
+                    </article>;
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </section>
 
-        <aside className="learning-side">
-          <section className="learning-side-card track-about"><header><TrackIcon size={18}/><h3>Giới thiệu lộ trình</h3></header><p>{isPerception ? "Từ thị giác máy tính, không gian 3D và deep learning đến VLM, VLA cho Humanoid." : "Từ cơ học robot và control đến MuJoCo, whole-body motion và triển khai phần cứng."}</p><button onClick={() => onOpenRoadmap(track)}>Xem Roadmap chi tiết <ArrowRight size={15}/></button></section>
-          <section className="learning-side-card quick-learning"><header><CircleGauge size={18}/><h3>Thống kê nhanh</h3></header><dl><div><dt>Tổng bài học</dt><dd>0</dd></div><div><dt>Thời gian học</dt><dd>0 phút</dd></div><div><dt>XP hiện tại</dt><dd>0 XP</dd></div><div><dt>Module khả dụng</dt><dd>0 / {modules.length}</dd></div></dl></section>
-          <section className="learning-side-card"><header><Lightbulb size={18}/><h3>Gợi ý tiếp theo</h3></header><div className="learning-suggestion"><span>1</span><p><b>{modules[0][0]}</b><small>{modules[0][1]}</small></p></div><button className="disabled-action" disabled>Đang chờ bài học</button></section>
-          <section className="learning-side-card"><header><History size={18}/><h3>Hoạt động gần đây</h3></header><div className="learning-empty-activity"><span>○</span><p><b>Chưa có hoạt động</b><small>Hoạt động học và XP sẽ được ghi nhận tại đây.</small></p></div></section>
+        <aside className="learning-v2-side">
+          <section className="learning-v2-card"><header><CheckCircle2 size={18}/><h3>Nhiệm vụ hôm nay</h3><span className="empty-badge">0 nhiệm vụ</span></header><div className="learning-empty-state"><b>Chưa có nhiệm vụ</b><p>Nhiệm vụ sẽ xuất hiện khi bài học đầu tiên được phát hành.</p></div><button className="disabled-action" disabled>Chưa thể bắt đầu</button></section>
+          <section className="learning-v2-card"><header><Lightbulb size={18}/><h3>Gợi ý tiếp theo</h3></header><div className="learning-suggestion"><span>1</span><p><b>{modules[0].title}</b><small>{modules[0].description}</small></p></div><button onClick={() => onOpenRoadmap(track)}>Xem trong Roadmap <ArrowRight size={14}/></button></section>
+          <section className="learning-v2-card"><header><History size={18}/><h3>Hoạt động gần đây</h3></header><div className="learning-empty-activity"><span>○</span><p><b>Chưa có hoạt động</b><small>Hoạt động học và XP sẽ được ghi nhận tại đây.</small></p></div></section>
+          <section className="learning-v2-card curriculum-sync"><header><RefreshCw size={18}/><h3>Curriculum Sync</h3></header><p><i />Learning và Roadmap đang dùng chung một nguồn dữ liệu.</p><dl><div><dt>Phases</dt><dd>3</dd></div><div><dt>Modules</dt><dd>15</dd></div></dl></section>
         </aside>
       </div>
     </section>

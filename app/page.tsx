@@ -2,6 +2,76 @@
 
 import { useMemo, useState } from "react";
 
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+
+  return (
+    <main className="login-page">
+      <div className="login-backdrop" />
+      <div className="login-vignette" />
+
+      <section className="login-story">
+        <div className="login-brand">
+          <div className="login-logo"><span>R</span></div>
+          <strong>Robo<span>Learn</span></strong>
+        </div>
+        <div className="story-copy">
+          <p className="story-kicker"><i /> LEARNING FOR THE NEXT GENERATION</p>
+          <h1>Learn.<br />Build.<br /><em>Master Robotics.</em></h1>
+          <p>One workspace to learn AI Perception, Control, Simulation and intelligent systems for Humanoid Robots.</p>
+        </div>
+        <div className="learning-pillars">
+          {[
+            ["◉", "AI Perception", "Vision · VLM · VLA"],
+            ["⌁", "Control & Simulation", "Dynamics · Planning"],
+            ["◇", "3D Vision", "Depth · SLAM · ROS 2"],
+            ["✦", "Intelligent Robotics", "Build real systems"],
+          ].map((item) => (
+            <div key={item[1]}><span>{item[0]}</span><b>{item[1]}</b><small>{item[2]}</small></div>
+          ))}
+        </div>
+        <p className="story-foot"><i /> Empowering the next generation<br />of robotics innovators.</p>
+      </section>
+
+      <section className="login-zone">
+        <form className="login-card" onSubmit={(event) => { event.preventDefault(); onLogin(); }}>
+          <div className="login-card-head">
+            <span className="secure-chip">● PRIVATE WORKSPACE</span>
+            <h2>Welcome back<span>.</span></h2>
+            <p>Sign in to continue your robotics learning journey.</p>
+          </div>
+
+          <label className="login-field">
+            <span>Username</span>
+            <div><i>◎</i><input defaultValue="minhtuan" autoComplete="username" aria-label="Username" /></div>
+          </label>
+          <label className="login-field">
+            <span>Password</span>
+            <div><i>▣</i><input type={showPassword ? "text" : "password"} defaultValue="robotics2026" autoComplete="current-password" aria-label="Password" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Hiện hoặc ẩn mật khẩu">{showPassword ? "◉" : "⊘"}</button></div>
+          </label>
+
+          <div className="login-options">
+            <label><button type="button" className={remember ? "checked" : ""} onClick={() => setRemember(!remember)}>{remember ? "✓" : ""}</button> Remember me</label>
+            <button type="button">Forgot password?</button>
+          </div>
+
+          <button className="sign-in" type="submit"><span>→</span> Sign In <i>ENTER ↵</i></button>
+          <div className="secure-line"><span /><b>♢</b> Secure & Private<span /></div>
+
+          <div className="login-benefits">
+            <div><span>♙</span><p><b>Hands-on Projects</b><small>Real robotics challenges</small></p></div>
+            <div><span>♢</span><p><b>Instant Feedback</b><small>Test, evaluate, improve</small></p></div>
+            <div><span>▥</span><p><b>Track Progress</b><small>Own your learning path</small></p></div>
+          </div>
+          <p className="demo-note">Prototype access · Click Sign In to explore</p>
+        </form>
+      </section>
+      <footer className="login-quote">“The best way to predict the future is to invent it.” <span>— Alan Kay</span></footer>
+    </main>
+  );
+}
+
 const tracks = [
   { icon: "⌁", name: "Nền tảng", meta: "12 bài", progress: 100, color: "#6c63ff" },
   { icon: "◎", name: "Computer Vision", meta: "24 bài", progress: 38, color: "#7c5cff" },
@@ -36,6 +106,7 @@ const codeLines = [
 ];
 
 export default function Home() {
+  const [authenticated, setAuthenticated] = useState(false);
   const [tab, setTab] = useState<"lesson" | "notes">("lesson");
   const [bottomTab, setBottomTab] = useState<"tests" | "output">("tests");
   const [running, setRunning] = useState(false);
@@ -53,6 +124,8 @@ export default function Home() {
       setStreak((value) => Math.max(value, 7));
     }, 900);
   };
+
+  if (!authenticated) return <LoginScreen onLogin={() => setAuthenticated(true)} />;
 
   return (
     <main className={`app-shell ${focus ? "focus-mode" : ""}`}>

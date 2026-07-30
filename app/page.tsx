@@ -460,6 +460,75 @@ function lessonWorkspaceName(kind: LessonKind) {
   return "Coding Playground";
 }
 
+function CodingPlaygroundWorkspace({ kind, module, lessonTitle, onBack }: { kind: "Coding" | "Simulation"; module: CurriculumModule; lessonTitle: string; onBack: () => void }) {
+  const isSimulation = kind === "Simulation";
+  const storageKey = `robolearn-draft-${module.track}-${module.moduleNumber}-${kind.toLowerCase()}`;
+  const starter = isSimulation
+    ? `import numpy as np\n\nclass HumanoidSimulation:\n    def __init__(self, dt: float = 0.01):\n        self.dt = dt\n        self.state = np.zeros(3)\n\n    def step(self, command):\n        # TODO: cập nhật trạng thái mô phỏng\n        return self.state\n`
+    : `def solve(sample):\n    \"\"\"Implement the lesson pipeline.\"\"\"\n    # TODO: transform the input and return a result\n    result = sample\n    return result\n`;
+  const [code, setCode] = useState(starter);
+  const [caseIndex, setCaseIndex] = useState(0);
+  const [checkResult, setCheckResult] = useState<{ ok: boolean; lines: string[] } | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const draft = window.localStorage.getItem(storageKey);
+    if (draft) setCode(draft);
+  }, [storageKey]);
+
+  const runChecks = () => {
+    const checks = isSimulation
+      ? [
+          ["Có lớp mô phỏng", /class\s+\w+Simulation/.test(code)],
+          ["Có phương thức step", /def\s+step\s*\(/.test(code)],
+          ["Có giá trị trả về", /\breturn\b/.test(code)],
+        ] as const
+      : [
+          ["Có hàm xử lý", /def\s+\w+\s*\(/.test(code)],
+          ["Có giá trị trả về", /\breturn\b/.test(code)],
+          ["Không còn TODO", !/TODO/.test(code)],
+        ] as const;
+    setCheckResult({ ok: checks.every((item) => item[1]), lines: checks.map(([label, ok]) => `${ok ? "✓" : "○"} ${label}`) });
+  };
+
+  const saveDraft = () => {
+    window.localStorage.setItem(storageKey, code);
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1800);
+  };
+
+  return (
+    <section className={`coding-playground coding-playground-${module.track}`}>
+      <header className="coding-playground-header">
+        <button onClick={onBack}><PanelLeftOpen size={18}/> Quay lại bài học</button>
+        <div><span>{isSimulation ? "SIMULATION EXERCISE" : "CODING EXERCISE"}</span><h1>{lessonTitle}</h1><p>{module.title} · Python 3 · Bản nháp lưu trên thiết bị</p></div>
+        <div className="playground-header-actions"><button onClick={() => { setCode(starter); setCheckResult(null); }}><RotateCcw size={16}/> Đặt lại</button><button onClick={saveDraft}><Save size={16}/>{saved ? "Đã lưu" : "Lưu bản nháp"}</button></div>
+      </header>
+      <div className="coding-playground-grid">
+        <aside className="challenge-panel">
+          <span>{isSimulation ? "SIMULATION" : "CODING"} · MEDIUM</span><h2>{isSimulation ? "Xây dựng bước mô phỏng tối thiểu" : "Hoàn thiện pipeline xử lý mẫu"}</h2>
+          <p>{isSimulation ? "Hoàn thiện lớp mô phỏng để nhận command, cập nhật state và trả về trạng thái mới sau một bước thời gian." : "Hoàn thiện hàm xử lý để nhận dữ liệu đầu vào, thực hiện biến đổi cần thiết và trả về kết quả có thể kiểm thử."}</p>
+          <h3>Yêu cầu</h3><ul>{isSimulation ? <><li>Giữ timestep xác định.</li><li>Có phương thức <code>step(command)</code>.</li><li>Trả về state sau mỗi bước.</li></> : <><li>Giữ chữ ký hàm rõ ràng.</li><li>Không thay đổi dữ liệu đầu vào ngoài ý muốn.</li><li>Trả về kết quả từ hàm.</li></>}</ul>
+          <div className="challenge-example"><b>Ví dụ đầu vào</b><code>{isSimulation ? "command = [0.1, 0.0, -0.1]" : "sample = {\"value\": 1}"}</code><b>Kết quả mong đợi</b><code>{isSimulation ? "state: ndarray(3,)" : "result is not None"}</code></div>
+          <div className="runtime-notice"><Info size={17}/><p><b>Chưa có Python runtime</b>Phiên bản này chỉ kiểm tra cấu trúc code trong trình duyệt, không giả lập kết quả thực thi.</p></div>
+        </aside>
+        <main className="code-editor-panel">
+          <header><div><Code2 size={17}/><b>main.py</b><span>Python 3</span></div><small>{code.split("\n").length} dòng</small></header>
+          <div className="code-editor-body"><pre aria-hidden="true">{code.split("\n").map((_, index) => `${index + 1}\n`)}</pre><textarea aria-label="Python code editor" spellCheck={false} value={code} onChange={(event) => { setCode(event.target.value); setCheckResult(null); }}/></div>
+          <footer><span>UTF-8 · Spaces: 4</span><button onClick={runChecks}><TestTube2 size={17}/> Chạy kiểm tra</button></footer>
+        </main>
+        <aside className="testcase-panel">
+          <header><TestTube2 size={17}/><h2>Testcase</h2></header>
+          <nav>{[1,2,3].map((item, index) => <button key={item} className={caseIndex === index ? "active" : ""} onClick={() => setCaseIndex(index)}>Case {item}</button>)}</nav>
+          <section><h3>Input</h3><pre>{isSimulation ? `dt = ${[0.01,0.02,0.005][caseIndex]}\ncommand = [${caseIndex}, 0, ${-caseIndex}]` : `sample = { "value": ${caseIndex + 1} }`}</pre></section>
+          <section><h3>Kiểm tra cấu trúc</h3>{checkResult ? <div className={checkResult.ok ? "check-output pass" : "check-output"}>{checkResult.lines.map((line) => <p key={line}>{line}</p>)}<b>{checkResult.ok ? "Đạt kiểm tra tĩnh" : "Cần hoàn thiện thêm"}</b></div> : <div className="testcase-empty">Nhấn “Chạy kiểm tra” để phân tích cấu trúc bản nháp.</div>}</section>
+          <section><h3>Trạng thái runtime</h3><dl><div><dt>Python execution</dt><dd>Chưa kết nối</dd></div><div><dt>Simulation engine</dt><dd>{isSimulation ? "Chưa kết nối" : "Không yêu cầu"}</dd></div><div><dt>Submission</dt><dd>Chưa có backend</dd></div></dl></section>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
 function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule; onBack: () => void }) {
   const [openChapter, setOpenChapter] = useState(0);
   const [activeLesson, setActiveLesson] = useState({ chapter: 0, lesson: 0 });
@@ -471,6 +540,10 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
   }));
   const selected = chapters[activeLesson.chapter].lessons[activeLesson.lesson];
   const workspaceName = lessonWorkspaceName(selected.kind);
+
+  if (openedWorkspace === "Coding Playground" && (selected.kind === "Coding" || selected.kind === "Simulation")) {
+    return <CodingPlaygroundWorkspace kind={selected.kind} module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
+  }
 
   if (openedWorkspace) return (
     <section className={`module-learning-workspace module-tool-placeholder module-learning-${module.track}`}>

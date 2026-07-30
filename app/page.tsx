@@ -453,14 +453,31 @@ function lessonKind(track: "perception" | "control", chapterIndex: number, lesso
   return (track === "perception" ? perceptionKinds : controlKinds)[(chapterIndex + lessonIndex) % 5];
 }
 
+function lessonWorkspaceName(kind: LessonKind) {
+  if (kind === "Control") return "Control Workspace";
+  if (kind === "ROS2") return "ROS2 Workspace";
+  if (kind === "Quiz") return "Quiz";
+  return "Coding Playground";
+}
+
 function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule; onBack: () => void }) {
   const [openChapter, setOpenChapter] = useState(0);
   const [activeLesson, setActiveLesson] = useState({ chapter: 0, lesson: 0 });
+  const [lessonTab, setLessonTab] = useState<"content" | "example">("content");
+  const [openedWorkspace, setOpenedWorkspace] = useState<string | null>(null);
   const chapters = chapterThemes.map((theme, chapterIndex) => ({
     title: `Chương ${chapterIndex + 1}: ${theme}`,
     lessons: lessonThemes.map((lesson, lessonIndex) => ({ title: `${lesson}: ${module.title}`, kind: lessonKind(module.track, chapterIndex, lessonIndex) })),
   }));
   const selected = chapters[activeLesson.chapter].lessons[activeLesson.lesson];
+  const workspaceName = lessonWorkspaceName(selected.kind);
+
+  if (openedWorkspace) return (
+    <section className={`module-learning-workspace module-tool-placeholder module-learning-${module.track}`}>
+      <button onClick={() => setOpenedWorkspace(null)}><PanelLeftOpen size={18}/> Quay lại bài học</button>
+      <div><span>WORKSPACE PLACEHOLDER</span><h1>{openedWorkspace}</h1><p>Workspace này đã được nối với bài <b>{selected.title}</b>, nhưng công cụ chức năng sẽ được xây dựng ở giai đoạn tiếp theo.</p><dl><div><dt>Loại bài</dt><dd>{selected.kind}</dd></div><div><dt>Module</dt><dd>{module.title}</dd></div><div><dt>Trạng thái</dt><dd>Chưa triển khai</dd></div></dl></div>
+    </section>
+  );
 
   return (
     <section className={`module-learning-workspace module-learning-${module.track}`}>
@@ -491,12 +508,20 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
         <main className="module-lesson-stage">
           <div className="lesson-breadcrumb">Learning <i>›</i> {module.title} <i>›</i> Chương {activeLesson.chapter + 1}</div>
           <header><div><span>Bài {activeLesson.lesson + 1}</span><h2>{selected.title}</h2></div><em className={`lesson-kind kind-${selected.kind.toLowerCase()}`}>{selected.kind}</em></header>
-          <nav><button className="active">Nội dung</button><button disabled>Ví dụ</button><button disabled>Tài liệu</button><button disabled>Bài tập</button></nav>
-          <section className="lesson-draft-canvas">
-            <div className="lesson-draft-icon"><FileText size={28}/></div><span>NỘI DUNG ĐANG CHỜ BIÊN SOẠN</span><h3>Khung bài học đã sẵn sàng</h3>
-            <p>Bài này hiện chỉ có tên và phân loại <b>{selected.kind}</b>. Lý thuyết, mã nguồn, mô phỏng, câu hỏi và tài liệu sẽ chỉ xuất hiện sau khi bạn cung cấp dữ liệu thật.</p>
-            <dl><div><dt>Module</dt><dd>{module.title}</dd></div><div><dt>Chương</dt><dd>{activeLesson.chapter + 1} / 5</dd></div><div><dt>Bài</dt><dd>{activeLesson.lesson + 1} / 10</dd></div><div><dt>Trạng thái</dt><dd>Chưa xuất bản</dd></div></dl>
-          </section>
+          <nav><button className={lessonTab === "content" ? "active" : ""} onClick={() => setLessonTab("content")}>Nội dung</button><button className={lessonTab === "example" ? "active" : ""} onClick={() => setLessonTab("example")}>Ví dụ</button></nav>
+          {lessonTab === "content" ? <section className="lesson-sample-content">
+            <span>NỘI DUNG MINH HỌA · CHƯA XUẤT BẢN</span>
+            <h3>1. Mục tiêu của bài học</h3>
+            <p>Bài học giới thiệu cách đặt <b>{selected.title.toLowerCase()}</b> trong toàn bộ pipeline của module <b>{module.title}</b>. Người học cần xác định dữ liệu đầu vào, kết quả đầu ra và mối liên hệ của thành phần này với hệ thống Humanoid Robot.</p>
+            <div className="lesson-callout"><Info size={18}/><p><b>Điểm cần ghi nhớ</b> Một thành phần chỉ có ý nghĩa khi giao diện dữ liệu, giả định vận hành và tiêu chí kiểm thử của nó được mô tả rõ ràng.</p></div>
+            <h3>2. Quy trình tiếp cận</h3>
+            <ol><li>Xác định vấn đề và yêu cầu kỹ thuật.</li><li>Thiết kế mô hình hoặc thuật toán tối thiểu.</li><li>Kiểm thử bằng dữ liệu và điều kiện có thể lặp lại.</li><li>Đánh giá sai số trước khi tích hợp vào hệ thống lớn hơn.</li></ol>
+            <p className="lesson-sample-note">Đây là nội dung mẫu để kiểm tra bố cục. Nội dung chuyên môn hoàn chỉnh sẽ thay thế phần này khi dữ liệu của chương được cung cấp.</p>
+            <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>
+          </section> : <section className="lesson-example-content">
+            <span>VÍ DỤ MINH HỌA</span><h3>Pipeline tối thiểu</h3><pre><code>{`input = load_sample()\nmodel = configure_${selected.kind.toLowerCase()}()\nresult = model.run(input)\nvalidate(result)`}</code></pre><p>Ví dụ chỉ minh họa cấu trúc luồng xử lý; chưa phải mã nguồn thực thi của bài học.</p>
+            <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>
+          </section>}
         </main>
         <aside className="module-context-panel">
           <section><header><Info size={17}/><h3>Thông tin bài học</h3></header><dl><div><dt>Phân loại</dt><dd><em className={`lesson-kind kind-${selected.kind.toLowerCase()}`}>{selected.kind}</em></dd></div><div><dt>Tiến độ</dt><dd>Chưa bắt đầu</dd></div><div><dt>Thời lượng</dt><dd>Chưa xác định</dd></div><div><dt>XP</dt><dd>Chưa thiết lập</dd></div></dl></section>

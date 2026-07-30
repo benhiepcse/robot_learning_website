@@ -600,3 +600,54 @@ code { font-family:var(--font-geist-mono); }
 .about-product{text-align:center}.about-product .dash-r{margin:0 auto 10px}.about-product>h2{font-size:22px}.about-product>p{color:var(--dash-muted);line-height:1.55}.about-product dl{margin:16px 0 0}.about-product dl>div{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--dash-line)}.about-product dt{color:var(--dash-muted)}.about-product dd{margin:0;font-weight:650}
 .settings-actions{position:sticky;z-index:5;bottom:-80px;margin-top:14px;padding:11px 13px;display:flex;justify-content:flex-end;gap:9px;border:1px solid var(--dash-line);border-radius:13px;background:color-mix(in srgb,var(--dash-panel) 88%,transparent);backdrop-filter:blur(16px)}.settings-actions button{min-width:130px}
 @media(max-width:1550px){.settings-workspace{padding:23px 24px 90px}.settings-tabs{grid-template-columns:repeat(7,minmax(105px,1fr))}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-grid-three{grid-template-columns:repeat(3,minmax(0,1fr))}.settings-card{padding:14px}.settings-hero h1{font-size:30px}}
+
+/* Platform typography system */
+.real-dashboard{font-size:16px;line-height:1.5}
+.real-dashboard h1,.real-dashboard h2,.real-dashboard h3{line-height:1.15}
+.real-dashboard p{line-height:1.5}
+.real-dashboard button{font-size:15px;font-weight:500}
+.real-dashboard input,.real-dashboard select,.real-dashboard textarea{font-size:16px;font-weight:400}
+.real-dashboard label>span,.real-dashboard .settings-label{font-size:14px;font-weight:500}
+
+.learning-header h1,.roadmap-header h1,.settings-hero h1{font-size:44px;font-weight:700;line-height:1.1}
+.learning-header>div:first-child>span,.roadmap-header>div:first-child>span,.settings-hero>div:nth-child(2)>span{font-size:12px;font-weight:600}
+.learning-header p,.roadmap-header p,.settings-hero p{font-size:14px;line-height:1.4}
+.learning-tabs button,.roadmap-tabs button,.settings-tabs button{font-size:15px;font-weight:500}
+
+.learning-modules h2,.roadmap-intro h2,.roadmap-bottom h2{font-size:30px;font-weight:600}
+.learning-overview-copy h2{font-size:30px;font-weight:600}.learning-overview-copy h2 strong{font-size:16px}
+.learning-v2-card h3,.learning-v2-side h3,.roadmap-side-card h3{font-size:20px;font-weight:600}
+.learning-route-card>p,.learning-v2 .learning-overview-copy>p,.competency-card>p,.roadmap-intro p,.roadmap-bottom p{font-size:14px;line-height:1.5}
+.learning-overview-copy>span,.learning-module-list article>div:nth-child(2)>span,.roadmap-intro>div:nth-child(2)>span{font-size:12px;font-weight:600}
+.learning-v2 .learning-overview-stats span,.learning-quick-card dt,.curriculum-count span,.module-data span,.module-progress b,.learning-suggestion small,.learning-empty-state p,.learning-empty-activity small{font-size:12px;font-weight:500}
+.learning-v2 .learning-overview-stats b,.curriculum-count b{font-size:20px}
+.learning-phase>header span{font-size:22px;font-weight:700}.learning-phase>header small{font-size:12px}
+.learning-v2 .learning-module-list article{min-height:90px;grid-template-columns:48px minmax(0,1fr) 100px 130px 38px;gap:15px;padding:13px 15px}
+.learning-v2 .module-icon{width:42px;height:42px}
+.learning-v2 .learning-module-list h3{font-size:18px;font-weight:600}.learning-v2 .learning-module-list p{font-size:14px;line-height:1.4}
+.learning-v2 .module-data b{font-size:14px}.learning-v2-card>button{height:42px;font-size:15px}
+.learning-v2-body{grid-template-columns:minmax(0,1fr) 340px}.learning-v2-card{padding:20px}
+
+.roadmap-phase>header h2{font-size:22px;font-weight:700}.roadmap-phase>header p{font-size:14px}
+.roadmap-stage{height:190px;padding:18px}.roadmap-stage h3{font-size:20px;font-weight:600}.roadmap-stage p{height:45px;font-size:14px;line-height:1.5}
+.stage-top small,.stage-top b,.roadmap-stage footer>span{font-size:12px}.roadmap-stage footer{left:18px;right:18px;bottom:16px}
+.roadmap-side{gap:14px}.roadmap-side-card{padding:19px}.progress-overview>p span,.progress-overview>small,.roadmap-side-empty small,.next-stage>div:nth-of-type(2)>small,.competency-card>p{font-size:12px}.progress-overview>p b,.roadmap-side-empty b,.next-stage>div:nth-of-type(2)>b{font-size:14px}
+.next-stage>button{height:42px;font-size:15px}.track-snapshot>div span{font-size:12px}
+
+.settings-workspace{font-size:16px}.settings-card{padding:22px}.settings-card h2{font-size:22px;font-weight:600}
+.settings-tabs{margin-top:26px}.settings-tabs button{height:46px}
+.settings-row{min-height:62px;font-size:14px}.settings-row b{font-size:14px}.settings-row small{font-size:12px;line-height:1.4}
+.settings-row select{height:42px;font-size:16px}.settings-card input{height:42px;font-size:16px}
+.settings-card label>span{font-size:14px}.settings-notice b{font-size:16px}.settings-notice p,.settings-card>p.settings-copy{font-size:14px;line-height:1.5}
+.theme-choice button{height:76px;font-size:15px}.settings-toggle{flex-basis:40px;width:40px;height:24px}.settings-toggle i{width:20px;height:20px}.settings-toggle.on i{transform:translateX(16px)}
+.settings-primary,.settings-secondary,.settings-danger{min-height:44px;font-size:15px}.profile-settings>small{font-size:12px}.settings-save-state{font-size:12px}
+.editor-preview pre{font-size:14px}.markdown-sample b{font-size:16px}.markdown-sample p,.markdown-sample code{font-size:14px}
+.about-product>p,.about-product dl{font-size:14px}
+
+@media(max-width:1550px){
+  .learning-header h1,.roadmap-header h1,.settings-hero h1{font-size:40px}
+  .learning-v2-body{grid-template-columns:minmax(0,1fr) 310px}
+  .learning-v2 .learning-module-list article{grid-template-columns:44px minmax(0,1fr) 88px 105px 34px}
+  .roadmap-stage{height:185px}
+  .settings-card{padding:18px}
+}

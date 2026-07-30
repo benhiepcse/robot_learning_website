@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Activity,
   Anchor,
+  Bell,
   Bot,
   Box,
   Boxes,
@@ -22,17 +23,23 @@ import {
   ChartNoAxesCombined,
   Cpu,
   Database,
+  Cloud,
   Eye,
+  FolderOpen,
   FlaskConical,
   Footprints,
   Gamepad2,
+  GraduationCap,
   History,
   Image,
+  Info,
   LayoutDashboard,
   Layers3,
   Lightbulb,
   Library,
   Map,
+  Monitor,
+  Moon,
   Calculator,
   FileCode2,
   Gauge,
@@ -47,12 +54,15 @@ import {
   Navigation,
   Network,
   Orbit,
+  Palette,
+  PencilLine,
   PersonStanding,
   Radar,
   Repeat2,
   RadioTower,
   Ruler,
   Rocket,
+  RotateCcw,
   Route,
   Scale,
   ScanSearch,
@@ -62,6 +72,8 @@ import {
   Sparkles,
   Target,
   Settings,
+  Save,
+  Sun,
   Tags,
   TestTube2,
   UsersRound,
@@ -567,6 +579,208 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
   );
 }
 
+type RoboLearnSettings = {
+  language: "vi" | "en";
+  fontSize: number;
+  startupPage: string;
+  defaultTrack: "perception" | "control";
+  difficulty: string;
+  dailyGoal: number;
+  learningTips: boolean;
+  autoComplete: boolean;
+  dailyReminder: boolean;
+  xpAlerts: boolean;
+  editorLanguage: string;
+  editorFont: string;
+  tabSize: number;
+  wordWrap: boolean;
+  autoSave: boolean;
+  linting: boolean;
+  markdownPreview: boolean;
+  mathRendering: boolean;
+  mermaid: boolean;
+  spellCheck: boolean;
+  notifications: boolean;
+  achievementAlerts: boolean;
+  projectAlerts: boolean;
+  collaborationAlerts: boolean;
+  projectPath: string;
+  vaultPath: string;
+  datasetPath: string;
+  modelPath: string;
+  simulationPath: string;
+  exportFormat: string;
+  autoClean: boolean;
+  keepCache: boolean;
+  localBackup: boolean;
+};
+
+const defaultRoboLearnSettings: RoboLearnSettings = {
+  language: "vi",
+  fontSize: 100,
+  startupPage: "Dashboard",
+  defaultTrack: "perception",
+  difficulty: "Beginner",
+  dailyGoal: 30,
+  learningTips: true,
+  autoComplete: false,
+  dailyReminder: true,
+  xpAlerts: true,
+  editorLanguage: "Python",
+  editorFont: "JetBrains Mono",
+  tabSize: 4,
+  wordWrap: true,
+  autoSave: true,
+  linting: true,
+  markdownPreview: true,
+  mathRendering: true,
+  mermaid: true,
+  spellCheck: false,
+  notifications: true,
+  achievementAlerts: true,
+  projectAlerts: true,
+  collaborationAlerts: true,
+  projectPath: "D:\\RoboLearn\\Projects",
+  vaultPath: "D:\\RoboLearn\\Knowledge",
+  datasetPath: "D:\\RoboLearn\\Datasets",
+  modelPath: "D:\\RoboLearn\\Models",
+  simulationPath: "D:\\RoboLearn\\Simulation",
+  exportFormat: "PDF",
+  autoClean: true,
+  keepCache: true,
+  localBackup: true,
+};
+
+function SettingsToggle({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
+  return <button type="button" role="switch" aria-checked={checked} aria-label={label} className={`settings-toggle ${checked ? "on" : ""}`} onClick={() => onChange(!checked)}><i /></button>;
+}
+
+function SettingsWorkspace({
+  displayName,
+  username,
+  theme,
+  onThemeChange,
+}: {
+  displayName: string;
+  username: string;
+  theme: DashboardTheme;
+  onThemeChange: (theme: DashboardTheme) => void;
+}) {
+  const tabs = ["General", "Learning", "Editor & Markdown", "Notifications", "Paths", "Backup & Sync", "About"] as const;
+  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("General");
+  const [settings, setSettings] = useState<RoboLearnSettings>(defaultRoboLearnSettings);
+  const [saved, setSaved] = useState(false);
+  const [lastBackup, setLastBackup] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("robolearn-settings");
+    const backup = window.localStorage.getItem("robolearn-settings-backup-time");
+    if (stored) {
+      try { setSettings({ ...defaultRoboLearnSettings, ...JSON.parse(stored) }); } catch { /* keep safe defaults */ }
+    }
+    if (backup) setLastBackup(backup);
+  }, []);
+
+  const update = <K extends keyof RoboLearnSettings>(key: K, value: RoboLearnSettings[K]) => {
+    setSettings((current) => ({ ...current, [key]: value }));
+    setSaved(false);
+  };
+
+  const saveSettings = () => {
+    window.localStorage.setItem("robolearn-settings", JSON.stringify(settings));
+    document.documentElement.style.setProperty("--robolearn-font-scale", String(settings.fontSize / 100));
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1800);
+  };
+
+  const exportSettings = () => {
+    const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), settings }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "robolearn-settings.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const createBackup = () => {
+    const timestamp = new Date().toISOString();
+    window.localStorage.setItem("robolearn-settings-backup", JSON.stringify(settings));
+    window.localStorage.setItem("robolearn-settings-backup-time", timestamp);
+    setLastBackup(timestamp);
+  };
+
+  const restoreBackup = () => {
+    const backup = window.localStorage.getItem("robolearn-settings-backup");
+    if (backup) setSettings({ ...defaultRoboLearnSettings, ...JSON.parse(backup) });
+  };
+
+  const resetSettings = () => {
+    if (!window.confirm("Đặt lại toàn bộ tùy chọn về mặc định?")) return;
+    setSettings(defaultRoboLearnSettings);
+    onThemeChange("system");
+    window.localStorage.removeItem("robolearn-settings");
+  };
+
+  const toggleRow = (title: string, description: string, key: keyof RoboLearnSettings) => (
+    <div className="settings-row toggle-row"><div><b>{title}</b><small>{description}</small></div><SettingsToggle checked={Boolean(settings[key])} label={title} onChange={(value) => update(key, value as never)} /></div>
+  );
+
+  const selectRow = (title: string, key: keyof RoboLearnSettings, options: Array<[string, string]>) => (
+    <label className="settings-row"><span>{title}</span><select value={String(settings[key])} onChange={(event) => update(key, event.target.value as never)}>{options.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+  );
+
+  return (
+    <section className="settings-workspace">
+      <header className="settings-hero"><div className="settings-title-icon"><Settings size={25}/></div><div><span>PERSONAL WORKSPACE</span><h1>Settings</h1><p>Tùy chỉnh RoboLearn theo cách bạn học, viết code và xây dựng robot.</p></div><div className="settings-save-state">{saved ? "✓ Đã lưu" : "Thay đổi được lưu trên thiết bị này"}</div></header>
+      <nav className="settings-tabs" aria-label="Settings sections">{tabs.map((tab) => <button className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)} key={tab}>{tab}</button>)}</nav>
+
+      {activeTab === "General" && <div className="settings-grid">
+        <section className="settings-card profile-settings"><header><Info size={18}/><h2>Profile</h2></header><div className="settings-profile-avatar">{displayName.split(" ").map((part) => part[0]).join("")}</div><label><span>Display name</span><input value={displayName} readOnly /></label><label><span>Username</span><input value={username} readOnly /></label><label><span>Role</span><input value="Student" readOnly /></label><small>Tài khoản được chủ sở hữu hệ thống quản lý trực tiếp.</small></section>
+        <section className="settings-card"><header><Palette size={18}/><h2>Appearance</h2></header><span className="settings-label">Theme</span><div className="theme-choice"><button className={theme === "dark" ? "active" : ""} onClick={() => onThemeChange("dark")}><Moon size={20}/>Dark</button><button className={theme === "light" ? "active" : ""} onClick={() => onThemeChange("light")}><Sun size={20}/>Light</button><button className={theme === "system" ? "active" : ""} onClick={() => onThemeChange("system")}><Monitor size={20}/>System</button></div>{selectRow("Language", "language", [["vi","Tiếng Việt"],["en","English"]])}<label className="settings-row range-row"><span>Font size <b>{settings.fontSize}%</b></span><input type="range" min="90" max="115" step="5" value={settings.fontSize} onChange={(event) => update("fontSize", Number(event.target.value))} /></label>{selectRow("Startup page", "startupPage", [["Dashboard","Dashboard"],["Learning","Learning"],["Roadmap","Roadmap"]])}</section>
+        <section className="settings-card"><header><FolderOpen size={18}/><h2>Workspace & Files</h2></header><label className="settings-row path-input"><span>Project folder</span><input value={settings.projectPath} onChange={(event) => update("projectPath", event.target.value)} /></label>{selectRow("Default export format", "exportFormat", [["PDF","PDF"],["Markdown","Markdown"],["JSON","JSON"]])}{toggleRow("Auto clean build files", "Tự dọn file build tạm sau khi hoàn tất.", "autoClean")}{toggleRow("Keep simulation cache", "Giữ cache để tăng tốc lần chạy tiếp theo.", "keepCache")}</section>
+        <section className="settings-card"><header><Cloud size={18}/><h2>Privacy & Storage</h2></header><div className="settings-notice"><b>Private workspace</b><p>Thiết lập hiện được lưu cục bộ trong trình duyệt. Không có dữ liệu giả về CPU, RAM hoặc dung lượng.</p></div>{toggleRow("Local backup", "Cho phép tạo bản sao cấu hình trên thiết bị.", "localBackup")}<div className="settings-row"><span>Account access</span><b>Owner-managed</b></div><div className="settings-row"><span>Session</span><b>Private</b></div></section>
+      </div>}
+
+      {activeTab === "Learning" && <div className="settings-grid settings-grid-three">
+        <section className="settings-card"><header><GraduationCap size={18}/><h2>Learning Preferences</h2></header>{selectRow("Default learning track", "defaultTrack", [["perception","AI Perception"],["control","Control & Simulation"]])}{selectRow("Default difficulty", "difficulty", [["Beginner","Beginner"],["Intermediate","Intermediate"],["Advanced","Advanced"]])}<label className="settings-row"><span>Daily goal</span><select value={settings.dailyGoal} onChange={(e) => update("dailyGoal", Number(e.target.value))}><option value={15}>15 phút</option><option value={30}>30 phút</option><option value={60}>60 phút</option><option value={90}>90 phút</option></select></label></section>
+        <section className="settings-card"><header><Lightbulb size={18}/><h2>Learning Assistance</h2></header>{toggleRow("Show learning tips", "Hiển thị gợi ý trong bài học và project.", "learningTips")}{toggleRow("Auto mark lesson complete", "Chỉ hoàn thành khi tất cả testcase đã đạt.", "autoComplete")}{toggleRow("Daily goal reminder", "Nhắc khi mục tiêu ngày chưa hoàn thành.", "dailyReminder")}{toggleRow("XP notifications", "Hiển thị XP sau bài học hoặc task.", "xpAlerts")}</section>
+        <section className="settings-card"><header><Target size={18}/><h2>Progress Rules</h2></header><div className="settings-notice"><b>Tiến độ dựa trên dữ liệu thật</b><p>Module chỉ tăng tiến độ khi bài học hoặc task tương ứng thực sự hoàn thành.</p></div><div className="settings-row"><span>Learning progress</span><b>0%</b></div><div className="settings-row"><span>Current XP</span><b>0 XP</b></div><div className="settings-row"><span>Current streak</span><b>0 days</b></div></section>
+      </div>}
+
+      {activeTab === "Editor & Markdown" && <div className="settings-grid settings-grid-three">
+        <section className="settings-card"><header><PencilLine size={18}/><h2>Code Editor</h2></header>{selectRow("Default language", "editorLanguage", [["Python","Python"],["C++","C++"],["C","C"],["Bash","Bash"]])}{selectRow("Editor font", "editorFont", [["JetBrains Mono","JetBrains Mono"],["Geist Mono","Geist Mono"],["Fira Code","Fira Code"]])}<label className="settings-row"><span>Tab size</span><select value={settings.tabSize} onChange={(e) => update("tabSize", Number(e.target.value))}><option value={2}>2 spaces</option><option value={4}>4 spaces</option><option value={8}>8 spaces</option></select></label>{toggleRow("Word wrap", "Ngắt dòng dài trong editor.", "wordWrap")}{toggleRow("Auto-save", "Tự động lưu nội dung đang soạn.", "autoSave")}{toggleRow("Code linting", "Kiểm tra lỗi cú pháp khi viết code.", "linting")}</section>
+        <section className="settings-card"><header><FileCode2 size={18}/><h2>Markdown</h2></header>{toggleRow("Live preview", "Xem trước Markdown trong thời gian thực.", "markdownPreview")}{toggleRow("Math rendering", "Hiển thị công thức LaTeX/KaTeX.", "mathRendering")}{toggleRow("Mermaid diagrams", "Hiển thị sơ đồ Mermaid trong ghi chú.", "mermaid")}{toggleRow("Spell check", "Kiểm tra chính tả nội dung ghi chú.", "spellCheck")}</section>
+        <section className="settings-card editor-preview"><header><Code2 size={18}/><h2>Preview</h2></header><pre><span>def</span> control(robot):{"\n"}    <i># RoboLearn editor</i>{"\n"}    robot.step()</pre><div className="markdown-sample"><b>Markdown Preview</b><p>Equations, diagrams and robotics notes appear here.</p><code>τ = M(q)q̈ + C(q,q̇)q̇ + g(q)</code></div></section>
+      </div>}
+
+      {activeTab === "Notifications" && <div className="settings-grid settings-grid-three">
+        <section className="settings-card"><header><Bell size={18}/><h2>Notification Center</h2></header>{toggleRow("Enable notifications", "Bật thông báo trong RoboLearn.", "notifications")}{toggleRow("Achievements & XP", "Thông báo thành tích, level và XP.", "achievementAlerts")}{toggleRow("Project updates", "Nhắc deadline và thay đổi task.", "projectAlerts")}{toggleRow("Collaboration", "Thông báo lời mời và phản hồi nhóm.", "collaborationAlerts")}</section>
+        <section className="settings-card"><header><GraduationCap size={18}/><h2>Learning Reminders</h2></header>{toggleRow("Daily learning reminder", "Nhắc mục tiêu học tập mỗi ngày.", "dailyReminder")}{toggleRow("Learning tips", "Gợi ý nội dung nên học tiếp.", "learningTips")}{toggleRow("XP summary", "Hiển thị XP nhận được sau mỗi hoạt động.", "xpAlerts")}</section>
+        <section className="settings-card"><header><Info size={18}/><h2>Delivery</h2></header><div className="settings-notice"><b>In-app only</b><p>Website hiện chỉ gửi thông báo bên trong ứng dụng. Email và push notification chưa được kết nối nên không hiển thị như đã hoạt động.</p></div></section>
+      </div>}
+
+      {activeTab === "Paths" && <div className="settings-grid settings-grid-two">
+        <section className="settings-card"><header><FolderOpen size={18}/><h2>Workspace Paths</h2></header>{([["Project folder","projectPath"],["Knowledge Vault","vaultPath"],["Datasets","datasetPath"],["Model cache","modelPath"],["Simulation assets","simulationPath"]] as Array<[string, keyof RoboLearnSettings]>).map(([label,key]) => <label className="path-field" key={key}><span>{label}</span><input value={String(settings[key])} onChange={(e) => update(key, e.target.value as never)} /></label>)}</section>
+        <section className="settings-card"><header><Info size={18}/><h2>Path Behavior</h2></header><div className="settings-notice"><b>Desktop workspace paths</b><p>Các đường dẫn này là tùy chọn cấu hình. Trình duyệt không tự ý truy cập file trên máy tính; quyền truy cập chỉ được yêu cầu khi bạn chủ động mở hoặc nhập file.</p></div>{toggleRow("Auto clean build files", "Dọn artifact tạm sau build.", "autoClean")}{toggleRow("Keep simulation cache", "Giữ cache MuJoCo/Gazebo/Isaac để tải nhanh.", "keepCache")}</section>
+      </div>}
+
+      {activeTab === "Backup & Sync" && <div className="settings-grid settings-grid-three">
+        <section className="settings-card"><header><Save size={18}/><h2>Local Backup</h2></header><p className="settings-copy">Tạo một snapshot cấu hình ngay trong trình duyệt này.</p><button className="settings-primary" onClick={createBackup}>Tạo backup ngay</button><div className="settings-row"><span>Backup gần nhất</span><b>{lastBackup ? new Date(lastBackup).toLocaleString("vi-VN") : "Chưa có"}</b></div>{lastBackup && <button className="settings-secondary" onClick={restoreBackup}>Khôi phục backup</button>}</section>
+        <section className="settings-card"><header><Cloud size={18}/><h2>Sync Status</h2></header><div className="settings-notice"><b>Cloud sync chưa kết nối</b><p>Cấu hình hiện chỉ tồn tại trên thiết bị này. RoboLearn sẽ không giả lập trạng thái đồng bộ khi chưa có backend.</p></div></section>
+        <section className="settings-card"><header><FileCode2 size={18}/><h2>Export & Reset</h2></header><button className="settings-secondary" onClick={exportSettings}>Export settings (.json)</button><button className="settings-danger" onClick={resetSettings}><RotateCcw size={15}/> Reset all settings</button></section>
+      </div>}
+
+      {activeTab === "About" && <div className="settings-grid settings-grid-two">
+        <section className="settings-card about-product"><div className="dash-r">R</div><h2>RoboLearn</h2><p>Private robotics learning workspace for Humanoid AI Perception, Control and Simulation.</p><dl><div><dt>Version</dt><dd>0.32</dd></div><div><dt>Access</dt><dd>Private</dd></div><div><dt>Curriculum</dt><dd>AI Perception · Control & Simulation</dd></div></dl></section>
+        <section className="settings-card"><header><Info size={18}/><h2>Platform Information</h2></header><div className="settings-notice"><b>Honest system state</b><p>RoboLearn chỉ hiển thị dữ liệu học tập, backup và kết nối đã thực sự tồn tại. Các chỉ số hệ thống không được giả lập.</p></div><div className="settings-row"><span>Authentication</span><b>Owner-managed accounts</b></div><div className="settings-row"><span>Registration</span><b>Disabled</b></div><div className="settings-row"><span>Theme</span><b>{theme}</b></div></section>
+      </div>}
+
+      <footer className="settings-actions"><button className="settings-secondary" onClick={exportSettings}>Export settings</button><button className="settings-primary" onClick={saveSettings}>{saved ? "Đã lưu" : "Lưu thay đổi"}</button></footer>
+    </section>
+  );
+}
+
 function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [roadmapTrack, setRoadmapTrack] = useState<"perception" | "control">("perception");
@@ -689,6 +903,8 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
           <LearningWorkspace onOpenRoadmap={(track) => { setRoadmapTrack(track); setActiveNav("Roadmap"); }} />
         ) : activeNav === "Roadmap" ? (
           <RoadmapWorkspace initialTrack={roadmapTrack} />
+        ) : activeNav === "Settings" ? (
+          <SettingsWorkspace displayName={displayName} username={username} theme={theme} onThemeChange={setTheme} />
         ) : activeNav !== "Dashboard" ? (
           <div className="standalone-empty">
             {emptyState(

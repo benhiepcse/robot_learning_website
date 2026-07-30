@@ -553,10 +553,10 @@ code { font-family:var(--font-geist-mono); }
 .learning-v2-top{display:grid;grid-template-columns:minmax(540px,1.55fr) minmax(270px,.72fr) minmax(250px,.66fr);gap:14px;margin-top:22px}
 .learning-v2 .learning-header{position:relative;min-height:112px;padding-right:220px;isolation:isolate}
 .learning-v2 .learning-header>div{position:relative;z-index:2}
-.learning-v2 .learning-header:after{content:"";position:absolute;z-index:1;right:-12px;bottom:-12px;width:330px;height:165px;pointer-events:none;background-position:right bottom;background-repeat:no-repeat;background-size:330px auto;opacity:.72;filter:saturate(.9) drop-shadow(0 0 24px rgba(var(--learn-rgb),.18));mask-image:linear-gradient(90deg,transparent 0,#000 38%,#000 100%)}
+.learning-v2 .learning-header:after{content:"";position:absolute;z-index:1;right:-12px;bottom:-12px;width:330px;height:165px;pointer-events:none;background-position:right bottom;background-repeat:no-repeat;background-size:330px auto;opacity:.22;filter:blur(.45px) saturate(.68) brightness(.78) drop-shadow(0 0 30px rgba(var(--learn-rgb),.16));mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.35) 34%,#000 68%,rgba(0,0,0,.7) 100%)}
 .learning-v2.learning-perception .learning-header:after{background-image:url("/learning-perception-art-v2.png")}
 .learning-v2.learning-control .learning-header:after{background-image:url("/learning-control-art-v2.png")}
-.theme-light .learning-v2 .learning-header:after{opacity:.3;filter:saturate(.65) contrast(.88) drop-shadow(0 8px 24px rgba(var(--learn-rgb),.13));mix-blend-mode:multiply}
+.theme-light .learning-v2 .learning-header:after{opacity:.11;filter:blur(.55px) saturate(.45) contrast(.76) brightness(.82);mix-blend-mode:multiply}
 .learning-v2 .learning-overview{min-height:220px;padding:20px 22px;grid-template-columns:132px minmax(0,1fr);gap:20px;border-radius:15px}
 .learning-v2 .learning-zero-ring{width:124px;height:124px;border-width:12px}
 .learning-v2 .learning-zero-ring b{font-size:29px}

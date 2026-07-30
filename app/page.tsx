@@ -752,6 +752,126 @@ function RoboticWorkspace({ module, lessonTitle, onBack }: { module: CurriculumM
   );
 }
 
+const rosStarterFiles = {
+  "talker.cpp": `#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+
+class Talker : public rclcpp::Node {
+public:
+  Talker() : Node("talker") {
+    publisher_ = create_publisher<std_msgs::msg::String>("chatter", 10);
+  }
+private:
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
+};`,
+  "listener.cpp": `#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+
+class Listener : public rclcpp::Node {
+public:
+  Listener() : Node("listener") {
+    subscription_ = create_subscription<std_msgs::msg::String>(
+      "chatter", 10, [](std_msgs::msg::String::SharedPtr msg) {
+        RCLCPP_INFO(rclcpp::get_logger("listener"), "%s", msg->data.c_str());
+      });
+  }
+private:
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
+};`,
+  "CMakeLists.txt": `cmake_minimum_required(VERSION 3.8)
+project(robolearn_pubsub)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+ament_package()`,
+  "package.xml": `<package format="3">
+  <name>robolearn_pubsub</name>
+  <version>0.0.1</version>
+  <description>RoboLearn ROS2 publisher/subscriber exercise</description>
+  <maintainer email="learner@example.com">Learner</maintainer>
+  <license>Apache-2.0</license>
+</package>`,
+};
+
+function RosGraphPreview({ running }: { running: boolean }) {
+  return <div className={`ros-graph-preview ${running ? "running" : ""}`}>
+    <div className="ros-grid-lines"/><span className="ros-axis axis-x">X</span><span className="ros-axis axis-y">Y</span>
+    <div className="ros-node talker"><RadioTower size={22}/><b>/talker</b><small>Publisher</small></div>
+    <div className="ros-topic-line"><i/><span>/chatter</span></div>
+    <div className="ros-node listener"><Radar size={22}/><b>/listener</b><small>Subscriber</small></div>
+    <p>{running ? "Graph preview đang cập nhật từ cấu trúc code" : "Nhấn “Kiểm tra workspace” để dựng graph preview"}</p>
+  </div>;
+}
+
+function ROS2Workspace({ module, lessonTitle, onBack }: { module: CurriculumModule; lessonTitle: string; onBack: () => void }) {
+  const storageKey = `robolearn-ros2-${module.track}-${module.moduleNumber}`;
+  const [files, setFiles] = useState<Record<string, string>>(rosStarterFiles);
+  const [activeFile, setActiveFile] = useState<keyof typeof rosStarterFiles>("talker.cpp");
+  const [running, setRunning] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [terminal, setTerminal] = useState<string[]>(["ROS2 runtime chưa kết nối.", "Bạn có thể chỉnh sửa và kiểm tra tĩnh workspace trong trình duyệt."]);
+  useEffect(() => {
+    const draft = window.localStorage.getItem(storageKey);
+    if (draft) {
+      try { setFiles(JSON.parse(draft)); } catch { /* Ignore malformed device-local drafts. */ }
+    }
+  }, [storageKey]);
+  const checks = useMemo(() => ({
+    publisher: /create_publisher/.test(files["talker.cpp"] || ""),
+    subscriber: /create_subscription/.test(files["listener.cpp"] || ""),
+    topic: /["']chatter["']/.test(`${files["talker.cpp"] || ""}${files["listener.cpp"] || ""}`),
+    cmake: /find_package\(rclcpp REQUIRED\)/.test(files["CMakeLists.txt"] || ""),
+  }), [files]);
+  const runWorkspaceCheck = () => {
+    const passed = Object.values(checks).filter(Boolean).length;
+    setRunning(passed >= 3);
+    setTerminal([
+      "$ robolearn check ros2_ws",
+      `${checks.publisher ? "✓" : "○"} Publisher declaration`,
+      `${checks.subscriber ? "✓" : "○"} Subscriber declaration`,
+      `${checks.topic ? "✓" : "○"} Shared /chatter topic`,
+      `${checks.cmake ? "✓" : "○"} CMake dependency`,
+      `${passed}/4 static checks passed`,
+      "Không thực thi colcon hoặc ROS2 runtime trên phiên bản này.",
+    ]);
+  };
+  const saveWorkspace = () => {
+    window.localStorage.setItem(storageKey, JSON.stringify(files));
+    setSaved(true); window.setTimeout(() => setSaved(false), 1800);
+  };
+  return <section className="ros-workspace">
+    <header className="ros-workspace-header">
+      <button onClick={onBack}><PanelLeftOpen size={18}/> Quay lại bài học</button>
+      <div><span>ROS2 WORKSPACE</span><h1>{lessonTitle}</h1><p>{module.title} · Publisher & Subscriber · C++ workspace draft</p></div>
+      <div className="ros-header-actions"><button onClick={runWorkspaceCheck}><Rocket size={16}/> Kiểm tra workspace</button><button onClick={saveWorkspace}><Save size={16}/>{saved ? "Đã lưu" : "Lưu workspace"}</button></div>
+    </header>
+    <div className="ros-workspace-grid">
+      <aside className="ros-file-panel">
+        <header><FolderOpen size={16}/><div><b>Workspace files</b><span>ros2_ws/src/robolearn_pubsub</span></div></header>
+        <div className="ros-tree"><p><ChevronDown size={13}/> ros2_ws</p><p className="depth-1"><ChevronDown size={13}/> src</p><p className="depth-2"><ChevronDown size={13}/> robolearn_pubsub</p>{Object.keys(files).map((file) => <button className={activeFile === file ? "active" : ""} key={file} onClick={() => setActiveFile(file as keyof typeof rosStarterFiles)}><FileCode2 size={14}/>{file}</button>)}</div>
+        <section className="ros-runtime-note"><Info size={16}/><p><b>Runtime status</b>ROS2, colcon và RViz chưa kết nối. Kết quả bên phải là phân tích tĩnh và graph preview.</p></section>
+      </aside>
+      <main className="ros-main-column">
+        <section className="ros-editor">
+          <header><div><Code2 size={16}/><b>{activeFile}</b></div><span>C++ / ROS2</span></header>
+          <div><pre aria-hidden="true">{files[activeFile].split("\n").map((_, index) => `${index + 1}\n`)}</pre><textarea aria-label={`Trình soạn thảo ${activeFile}`} spellCheck={false} value={files[activeFile]} onChange={(event) => setFiles((current) => ({ ...current, [activeFile]: event.target.value }))}/></div>
+        </section>
+        <section className="ros-terminal"><header><div><Monitor size={16}/><b>Terminal preview</b></div><span>Static check only</span></header><pre>{terminal.join("\n")}</pre></section>
+      </main>
+      <aside className="ros-observability">
+        <section className="ros-visualization"><header><div><Orbit size={17}/><b>ROS Graph visualization</b></div><span>{running ? "Preview active" : "Idle"}</span></header><RosGraphPreview running={running}/></section>
+        <section className="ros-topic-table"><header><RadioTower size={16}/><b>Topics</b></header><div><span>Topic</span><span>Type</span><span>Pub / Sub</span></div><p><b>/chatter</b><span>std_msgs/String</span><em>{checks.publisher ? 1 : 0} / {checks.subscriber ? 1 : 0}</em></p></section>
+        <section className="ros-node-table"><header><Network size={16}/><b>Nodes</b></header><p><span><i className={checks.publisher ? "ok" : ""}/>/talker</span><em>{checks.publisher ? "Detected" : "Missing"}</em></p><p><span><i className={checks.subscriber ? "ok" : ""}/>/listener</span><em>{checks.subscriber ? "Detected" : "Missing"}</em></p></section>
+      </aside>
+      <aside className="ros-insights">
+        <section><header><Target size={16}/><b>Mục tiêu cấu trúc</b></header><p className={checks.publisher ? "done" : ""}><CheckCircle2 size={14}/> Tạo publisher node</p><p className={checks.subscriber ? "done" : ""}><CheckCircle2 size={14}/> Tạo subscriber node</p><p className={checks.topic ? "done" : ""}><CheckCircle2 size={14}/> Giao tiếp qua /chatter</p><p className={checks.cmake ? "done" : ""}><CheckCircle2 size={14}/> Khai báo rclcpp trong CMake</p></section>
+        <section className="ros-guidance"><header><Lightbulb size={16}/><b>Gợi ý</b></header><code>ros2 topic list</code><code>ros2 topic echo /chatter</code><small>Các lệnh chỉ để tham khảo khi bạn chạy workspace trong môi trường ROS2 thật.</small></section>
+        <section className="ros-system-status"><header><Activity size={16}/><b>Trạng thái</b></header><dl><div><dt>Editor</dt><dd>Hoạt động</dd></div><div><dt>Static checks</dt><dd>Hoạt động</dd></div><div><dt>ROS2 runtime</dt><dd>Chưa kết nối</dd></div><div><dt>RViz</dt><dd>Graph preview</dd></div></dl></section>
+      </aside>
+    </div>
+  </section>;
+}
+
 function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule; onBack: () => void }) {
   const [openChapter, setOpenChapter] = useState(0);
   const [activeLesson, setActiveLesson] = useState({ chapter: 0, lesson: 0 });
@@ -772,6 +892,9 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
   }
   if (openedWorkspace === "Robotic Workspace" && selected.kind === "Robotics") {
     return <RoboticWorkspace module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
+  }
+  if (openedWorkspace === "ROS2 Workspace" && selected.kind === "ROS2") {
+    return <ROS2Workspace module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
   }
 
   if (openedWorkspace) return (

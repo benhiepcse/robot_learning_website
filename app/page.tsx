@@ -434,6 +434,11 @@ function getModuleIcon(track: "perception" | "control", index: number) {
 
 type LessonKind = "Coding" | "Robotics" | "Control" | "ROS2" | "Simulation" | "Quiz";
 type CurriculumModule = { track: "perception" | "control"; phase: string; title: string; description: string; moduleNumber: number };
+type CourseLesson = {
+  title: string; kind: LessonKind; duration: number; xp: number; summary: string;
+  objectives: string[]; concepts: string[]; example: string; source: string;
+};
+type CourseChapter = { title: string; description: string; lessons: CourseLesson[] };
 
 const chapterThemes = [
   "Nền tảng và thuật ngữ cốt lõi",
@@ -460,6 +465,119 @@ function lessonWorkspaceName(kind: LessonKind) {
   if (kind === "Quiz") return "Quiz";
   return "Coding Playground";
 }
+
+function cvLesson(title: string, kind: LessonKind, concepts: string[], example: string, source: string, duration = 24): CourseLesson {
+  return {
+    title, kind, concepts, example, source, duration, xp: Math.max(20, Math.round(duration * 1.5)),
+    summary: `${title} là một mắt xích trong pipeline thị giác của humanoid: dữ liệu camera phải được biểu diễn đúng, xử lý có kiểm soát và tạo ra tín hiệu đủ tin cậy cho nhận thức hoặc điều khiển.`,
+    objectives: [
+      `Giải thích được ${concepts[0].toLowerCase()} và vai trò của nó trong computer vision.`,
+      `Phân biệt ${concepts[1].toLowerCase()} với các lựa chọn thường gặp.`,
+      `Áp dụng kiến thức vào tình huống camera trên Humanoid Robot và kiểm tra kết quả.`,
+    ],
+  };
+}
+
+const computerVisionFundamentalsCurriculum: CourseChapter[] = [
+  {
+    title: "Chương 1: Thị giác máy tính trong Humanoid Robot",
+    description: "Bài toán, pipeline, dữ liệu và giới hạn vận hành của hệ thống thị giác robot.",
+    lessons: [
+      cvLesson("Computer vision là gì?", "Robotics", ["nhận thức từ ảnh", "xử lý ảnh và computer vision"], "Phân tích luồng camera → perception → quyết định của robot.", "Szeliski, Ch. 1", 20),
+      cvLesson("Vai trò của thị giác trên Humanoid Robot", "Robotics", ["quan sát môi trường", "nhận thức và điều khiển"], "Xác định đầu ra thị giác cần thiết cho robot đi trong hành lang.", "Robotic Vision, Ch. 1", 22),
+      cvLesson("Pipeline perception từ sensor đến hành động", "Control", ["pipeline perception", "vòng lặp perception-control"], "Thiết kế pipeline tránh vật cản với ngân sách trễ 50 ms.", "Robotic Vision, Ch. 6-7", 28),
+      cvLesson("Phân loại bài toán computer vision", "Quiz", ["classification, detection, segmentation", "geometry và recognition"], "Chọn đúng loại bài toán cho nhận diện người, mặt sàn và độ sâu.", "Szeliski, Ch. 1 & 14", 18),
+      cvLesson("Dữ liệu đầu vào và đầu ra của hệ thống", "Coding", ["tensor ảnh", "đầu ra có cấu trúc"], "Đọc ảnh, kiểm tra shape, dtype và chuẩn hóa đầu vào.", "Dive into Deep Learning, Ch. 2", 26),
+      cvLesson("Độ chính xác, độ trễ và độ tin cậy", "Control", ["accuracy-latency trade-off", "confidence và failure mode"], "So sánh pipeline 15 FPS chính xác cao với pipeline 30 FPS ổn định.", "Goodfellow, Ch. 11", 25),
+      cvLesson("Không gian làm việc và công cụ OpenCV", "Coding", ["OpenCV và NumPy", "pipeline tái lập"], "Tạo chương trình kiểm tra camera và lưu metadata của frame.", "Cyganek & Siebert, Ch. 13", 30),
+      cvLesson("Tổng kết: thiết kế perception tối thiểu", "Quiz", ["yêu cầu hệ thống", "kiểm thử đầu-cuối"], "Lập đặc tả perception cho một nhiệm vụ humanoid trong nhà.", "Tổng hợp giáo trình", 22),
+    ],
+  },
+  {
+    title: "Chương 2: Hình thành và biểu diễn ảnh số",
+    description: "Từ ánh sáng, cảm biến và phép lấy mẫu đến ma trận pixel mà thuật toán sử dụng.",
+    lessons: [
+      cvLesson("Ánh sáng, bề mặt và cảm biến ảnh", "Robotics", ["photometric image formation", "reflectance và illumination"], "Quan sát một vật dưới ánh sáng mạnh, yếu và ngược sáng.", "Szeliski, Ch. 2", 28),
+      cvLesson("Pinhole camera và phép chiếu cơ bản", "Simulation", ["mô hình pinhole", "phép chiếu phối cảnh"], "Thay đổi tiêu cự và quan sát kích thước vật thể trên mặt ảnh.", "Szeliski, Ch. 2", 30),
+      cvLesson("Pixel, độ phân giải và trường nhìn", "Robotics", ["pixel và resolution", "field of view"], "Chọn camera cho humanoid quan sát vật ở khoảng cách 0.5-5 m.", "Cyganek & Siebert, Ch. 3", 25),
+      cvLesson("Sampling, aliasing và Nyquist", "Simulation", ["sampling không gian", "aliasing"], "Giảm kích thước ảnh sọc và quan sát moiré.", "Szeliski, Ch. 2-3", 28),
+      cvLesson("Bit depth, dynamic range và nhiễu", "Coding", ["bit depth", "dynamic range và sensor noise"], "So sánh ảnh 8-bit, 16-bit và ảnh bị clipping.", "Szeliski, Ch. 2 & 10", 27),
+      cvLesson("Kiểu dữ liệu, shape và memory layout", "Coding", ["dtype và tensor shape", "channel order và stride"], "Chuyển HWC↔CHW an toàn và đo dung lượng frame.", "Dive into Deep Learning, Ch. 2", 30),
+      cvLesson("Méo ảnh và giới hạn quang học", "Robotics", ["lens distortion", "blur, vignetting và noise"], "Nhận diện dấu hiệu méo xuyên tâm ở camera góc rộng.", "Cyganek & Siebert, Ch. 11", 25),
+      cvLesson("Kiểm tra chất lượng luồng camera", "ROS2", ["camera diagnostics", "timestamp và frame loss"], "Thiết kế checklist kiểm tra topic camera trước khi chạy perception.", "Robotic Vision, Ch. 8", 28),
+    ],
+  },
+  {
+    title: "Chương 3: Cường độ sáng, màu sắc và biến đổi điểm",
+    description: "Các phép biến đổi trực tiếp trên pixel để chuẩn hóa và làm rõ tín hiệu thị giác.",
+    lessons: [
+      cvLesson("Ảnh xám và cường độ sáng", "Coding", ["grayscale intensity", "luminance và brightness"], "Chuyển RGB sang grayscale và so sánh các trọng số kênh.", "Szeliski, Ch. 3", 24),
+      cvLesson("Không gian màu RGB, HSV, Lab và YCrCb", "Coding", ["color spaces", "chrominance và luminance"], "Tách vật thể màu dưới thay đổi độ sáng bằng HSV.", "Szeliski, Ch. 2-3", 32),
+      cvLesson("Histogram và phân bố cường độ", "Coding", ["image histogram", "contrast distribution"], "Vẽ histogram cho cảnh thiếu sáng và ngược sáng.", "Szeliski, Ch. 3", 26),
+      cvLesson("Contrast stretching và normalization", "Coding", ["contrast stretching", "normalization"], "Chuẩn hóa ảnh camera có dải cường độ hẹp.", "Szeliski, Ch. 3", 25),
+      cvLesson("Histogram equalization và CLAHE", "Coding", ["histogram equalization", "local contrast"], "Dùng CLAHE để làm rõ chi tiết trong hành lang tối.", "Szeliski, Ch. 3", 30),
+      cvLesson("Thresholding toàn cục và thích nghi", "Simulation", ["global threshold", "adaptive threshold"], "Tách ký hiệu đen trắng khi ánh sáng không đều.", "Szeliski, Ch. 3", 28),
+      cvLesson("White balance và color constancy", "Robotics", ["white balance", "color constancy"], "Hiệu chỉnh ám màu từ đèn tungsten và LED.", "Szeliski, Ch. 2 & 10", 27),
+      cvLesson("Bài thực hành: tiền xử lý camera robot", "Coding", ["preprocessing pipeline", "kiểm thử trên nhiều điều kiện sáng"], "Xây pipeline resize → color conversion → CLAHE → normalization.", "Tổng hợp Szeliski và OpenCV", 38),
+    ],
+  },
+  {
+    title: "Chương 4: Lọc ảnh, nhiễu và biểu diễn đa tỉ lệ",
+    description: "Convolution, bộ lọc không gian, miền tần số và pyramid cho perception ổn định.",
+    lessons: [
+      cvLesson("Convolution và kernel", "Coding", ["convolution rời rạc", "kernel và neighborhood"], "Tự cài convolution 2D cho kernel 3×3.", "Szeliski, Ch. 3", 34),
+      cvLesson("Mean, Gaussian và separable filtering", "Coding", ["low-pass filtering", "Gaussian separability"], "So sánh chất lượng và thời gian của Gaussian 2D với hai lượt 1D.", "Szeliski, Ch. 3", 32),
+      cvLesson("Median và bilateral filtering", "Coding", ["nonlinear filtering", "edge-preserving smoothing"], "Khử salt-and-pepper bằng median và giữ biên bằng bilateral.", "Szeliski, Ch. 3", 31),
+      cvLesson("Mô hình nhiễu và lựa chọn bộ lọc", "Quiz", ["Gaussian, impulse và shot noise", "filter selection"], "Chọn bộ lọc đúng cho bốn dạng nhiễu camera robot.", "Szeliski, Ch. 3 & 10", 22),
+      cvLesson("Gradient, Sobel và Laplacian", "Coding", ["image derivatives", "gradient magnitude và direction"], "Tính Sobel X/Y và tạo bản đồ độ lớn gradient.", "Szeliski, Ch. 3-4", 32),
+      cvLesson("Fourier transform và miền tần số", "Simulation", ["spatial-frequency duality", "low/high frequency"], "Quan sát phổ Fourier khi ảnh xuất hiện sọc tuần hoàn.", "Szeliski, Ch. 3", 35),
+      cvLesson("Gaussian và Laplacian pyramids", "Simulation", ["multi-resolution representation", "Gaussian và Laplacian pyramid"], "Theo dõi vật ở nhiều kích thước bằng image pyramid.", "Szeliski, Ch. 3; Cyganek, Ch. 5", 33),
+      cvLesson("Tối ưu lọc ảnh cho thời gian thực", "Control", ["compute budget", "độ trễ và chất lượng lọc"], "Chọn kernel và resolution để giữ pipeline dưới 10 ms.", "Cyganek & Siebert, Ch. 4", 28),
+    ],
+  },
+  {
+    title: "Chương 5: Biên, hình thái học và thành phần ảnh",
+    description: "Trích xuất cấu trúc, làm sạch mặt nạ và biến pixel thành vùng có ý nghĩa.",
+    lessons: [
+      cvLesson("Biên ảnh và tiêu chí một biên tốt", "Robotics", ["edge discontinuity", "localization và noise sensitivity"], "Xác định biên hữu ích cho phát hiện mép bàn.", "Szeliski, Ch. 4", 24),
+      cvLesson("Canny edge detector", "Coding", ["Gaussian-gradient-NMS", "hysteresis thresholding"], "Cài và điều chỉnh Canny cho cảnh trong nhà.", "Szeliski, Ch. 4", 34),
+      cvLesson("Đường thẳng và Hough transform", "Coding", ["Hough parameter space", "line detection"], "Phát hiện vạch hành lang và ước lượng hướng.", "Szeliski, Ch. 4", 32),
+      cvLesson("Structuring element và morphology", "Coding", ["structuring element", "erosion và dilation"], "Làm sạch mặt nạ nhị phân bằng kernel phù hợp.", "Szeliski, Ch. 3", 30),
+      cvLesson("Opening, closing và morphological gradient", "Coding", ["opening và closing", "morphological gradient"], "Loại nhiễu nhỏ và lấp lỗ trên mặt nạ vật thể.", "Szeliski, Ch. 3", 28),
+      cvLesson("Connected components và region properties", "Coding", ["connected-component labeling", "area, centroid và bounding box"], "Tìm các vùng và lọc vật theo diện tích.", "Szeliski, Ch. 3", 33),
+      cvLesson("Contours và shape descriptors", "Coding", ["contour representation", "moments và shape descriptors"], "Tính tâm, diện tích và độ tròn của vật thể.", "Szeliski, Ch. 4", 31),
+      cvLesson("Thực hành: phát hiện vùng có thể bước", "Simulation", ["classical segmentation pipeline", "robust post-processing"], "Tạo mặt nạ sàn, làm sạch và chọn vùng an toàn phía trước robot.", "Tổng hợp Szeliski", 40),
+    ],
+  },
+  {
+    title: "Chương 6: Đặc trưng, matching và chuyển động",
+    description: "Điểm nổi bật, mô tả cục bộ, ghép cặp và thông tin thời gian từ chuỗi ảnh.",
+    lessons: [
+      cvLesson("Corner, blob và interest point", "Robotics", ["repeatable keypoints", "corner và blob"], "So sánh điểm phát hiện trên tường trơn và cảnh giàu texture.", "Szeliski, Ch. 4", 27),
+      cvLesson("Harris và Shi-Tomasi", "Coding", ["structure tensor", "corner response"], "Phát hiện điểm tốt để theo dõi trên video.", "Szeliski, Ch. 4", 34),
+      cvLesson("Scale-space và keypoint đa tỉ lệ", "Simulation", ["scale invariance", "Gaussian scale-space"], "Quan sát keypoint khi vật thể tiến gần camera.", "Cyganek & Siebert, Ch. 5", 31),
+      cvLesson("Descriptor và khoảng cách đặc trưng", "Coding", ["local descriptor", "L2 và Hamming distance"], "Ghép descriptor float và binary bằng metric phù hợp.", "Szeliski, Ch. 4", 32),
+      cvLesson("Feature matching và ratio test", "Coding", ["nearest-neighbor matching", "ratio test và mutual check"], "Loại ghép sai giữa hai khung hình liên tiếp.", "Szeliski, Ch. 4 & 6", 34),
+      cvLesson("RANSAC và ước lượng mô hình bền vững", "Coding", ["robust estimation", "inlier và outlier"], "Ước lượng phép biến đổi khi 30% match bị sai.", "Szeliski, Ch. 6", 36),
+      cvLesson("Optical flow và giả định độ sáng", "Simulation", ["brightness constancy", "sparse và dense flow"], "Quan sát vector chuyển động khi camera quay đầu.", "Szeliski, Ch. 8", 35),
+      cvLesson("Theo dõi đặc trưng thời gian thực", "Control", ["temporal tracking", "drift và re-detection"], "Thiết kế vòng detect-track-redetect cho camera humanoid.", "Szeliski, Ch. 4 & 8", 32),
+    ],
+  },
+  {
+    title: "Chương 7: Từ thuật toán đến hệ thống perception robot",
+    description: "Kết nối các thành phần thành pipeline có thể đo lường, debug và tích hợp ROS2.",
+    lessons: [
+      cvLesson("Thiết kế pipeline theo nhiệm vụ robot", "Robotics", ["task-driven perception", "input-output contract"], "Thiết kế pipeline nhận biết cửa và vùng đi qua.", "Robotic Vision, Ch. 6", 28),
+      cvLesson("Đồng bộ thời gian và coordinate frame", "ROS2", ["timestamp synchronization", "sensor frame và base frame"], "Phát hiện hậu quả khi ảnh và robot pose lệch 100 ms.", "Robotic Vision, Ch. 8", 30),
+      cvLesson("Image transport và camera topic trong ROS2", "ROS2", ["sensor_msgs/Image", "QoS và image transport"], "Thiết kế node subscribe camera và publish ảnh đã xử lý.", "ROS2 integration supplement", 34),
+      cvLesson("Đo FPS, latency và throughput", "Coding", ["performance measurement", "latency distribution"], "Đo median và p95 latency thay vì chỉ FPS trung bình.", "Goodfellow, Ch. 11", 28),
+      cvLesson("Kiểm thử với dữ liệu ghi lại", "ROS2", ["record-replay testing", "rosbag và reproducibility"], "Chạy lại cùng chuỗi camera để so sánh hai pipeline.", "ROS2 integration supplement", 31),
+      cvLesson("Failure modes và degraded operation", "Control", ["failure detection", "safe degradation"], "Dừng điều hướng khi camera mất frame hoặc confidence thấp.", "Robotic Vision, Ch. 7", 28),
+      cvLesson("Mô phỏng camera và domain gap", "Simulation", ["synthetic camera data", "simulation-to-reality gap"], "So sánh blur, noise và ánh sáng giữa mô phỏng với camera thật.", "Robotic Vision, Ch. 8", 32),
+      cvLesson("Capstone: perception tối thiểu cho humanoid", "Quiz", ["end-to-end integration", "evaluation và acceptance criteria"], "Đặc tả, triển khai và đánh giá pipeline quan sát hành lang.", "Tổng hợp toàn module", 45),
+    ],
+  },
+];
 
 function CodingPlaygroundWorkspace({ kind, module, lessonTitle, onBack }: { kind: "Coding" | "Simulation"; module: CurriculumModule; lessonTitle: string; onBack: () => void }) {
   const isSimulation = kind === "Simulation";
@@ -877,12 +995,21 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
   const [activeLesson, setActiveLesson] = useState({ chapter: 0, lesson: 0 });
   const [lessonTab, setLessonTab] = useState<"content" | "example">("content");
   const [openedWorkspace, setOpenedWorkspace] = useState<string | null>(null);
-  const chapters = chapterThemes.map((theme, chapterIndex) => ({
+  const isComputerVisionFundamentals = module.track === "perception" && module.title === "Computer Vision Fundamentals";
+  const chapters: CourseChapter[] = isComputerVisionFundamentals ? computerVisionFundamentalsCurriculum : chapterThemes.map((theme, chapterIndex) => ({
     title: `Chương ${chapterIndex + 1}: ${theme}`,
-    lessons: lessonThemes.map((lesson, lessonIndex) => ({ title: `${lesson}: ${module.title}`, kind: lessonKind(module.track, chapterIndex, lessonIndex) })),
+    description: `Khung nội dung đang chờ biên soạn cho ${module.title}.`,
+    lessons: lessonThemes.map((lesson, lessonIndex) => ({
+      title: `${lesson}: ${module.title}`, kind: lessonKind(module.track, chapterIndex, lessonIndex), duration: 0, xp: 0,
+      summary: `Bài học giới thiệu ${lesson.toLowerCase()} trong module ${module.title}.`,
+      objectives: ["Xác định đầu vào và đầu ra.", "Mô tả thuật toán tối thiểu.", "Đề xuất tiêu chí kiểm thử."],
+      concepts: ["Khái niệm nền tảng", "Quy trình triển khai"],
+      example: "Xây dựng pipeline tối thiểu và kiểm tra kết quả.", source: "Chưa gắn nguồn",
+    })),
   }));
   const selected = chapters[activeLesson.chapter].lessons[activeLesson.lesson];
   const workspaceName = lessonWorkspaceName(selected.kind);
+  const lessonCount = chapters.reduce((total, chapter) => total + chapter.lessons.length, 0);
 
   if (openedWorkspace === "Coding Playground" && (selected.kind === "Coding" || selected.kind === "Simulation")) {
     return <CodingPlaygroundWorkspace kind={selected.kind} module={module} lessonTitle={selected.title} onBack={() => setOpenedWorkspace(null)} />;
@@ -909,21 +1036,21 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
       <header className="module-learning-header">
         <button onClick={onBack} className="module-back"><PanelLeftOpen size={18}/> Tất cả module</button>
         <div><span>{module.track === "perception" ? "AI PERCEPTION TRACK" : "CONTROL & SIMULATION TRACK"}</span><h1>{module.title}</h1><p>{module.phase} · Module {String(module.moduleNumber).padStart(2, "0")}</p></div>
-        <div className="module-draft-status"><b>Khung chương trình</b><span>Chưa xuất bản · 5 chương · 50 bài mẫu</span></div>
+        <div className={`module-draft-status ${isComputerVisionFundamentals ? "published" : ""}`}><b>{isComputerVisionFundamentals ? "Giáo trình đã biên soạn" : "Khung chương trình"}</b><span>{isComputerVisionFundamentals ? `${chapters.length} chương · ${lessonCount} bài · Humanoid-focused` : "Chưa xuất bản · 5 chương · 50 bài mẫu"}</span></div>
       </header>
       <div className="module-learning-grid">
         <aside className="module-chapter-rail">
-          <div className="module-rail-intro"><b>Nội dung module</b><span>0 / 50 bài đã xuất bản</span></div>
+          <div className="module-rail-intro"><b>Nội dung module</b><span>{isComputerVisionFundamentals ? `${lessonCount} / ${lessonCount} bài đã biên soạn` : `0 / ${lessonCount} bài đã xuất bản`}</span></div>
           {chapters.map((chapter, chapterIndex) => (
             <section className="module-chapter" key={chapter.title}>
               <button className="module-chapter-toggle" onClick={() => setOpenChapter(openChapter === chapterIndex ? -1 : chapterIndex)}>
-                <span><b>{chapter.title}</b><small>10 bài mẫu · Chưa xuất bản</small></span>
+                <span><b>{chapter.title}</b><small>{chapter.lessons.length} bài · {isComputerVisionFundamentals ? chapter.description : "Chưa xuất bản"}</small></span>
                 {openChapter === chapterIndex ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
               </button>
               {openChapter === chapterIndex && <div className="module-lesson-list">
                 {chapter.lessons.map((lesson, lessonIndex) => (
                   <button key={`${chapterIndex}-${lessonIndex}`} className={activeLesson.chapter === chapterIndex && activeLesson.lesson === lessonIndex ? "active" : ""} onClick={() => setActiveLesson({ chapter: chapterIndex, lesson: lessonIndex })}>
-                    <span>{lessonIndex + 1}</span><p><b>{lesson.title}</b><small>Khung nội dung</small></p><em className={`lesson-kind kind-${lesson.kind.toLowerCase()}`}>{lesson.kind}</em>
+                    <span>{lessonIndex + 1}</span><p><b>{lesson.title}</b><small>{isComputerVisionFundamentals ? `${lesson.duration} phút · ${lesson.xp} XP` : "Khung nội dung"}</small></p><em className={`lesson-kind kind-${lesson.kind.toLowerCase()}`}>{lesson.kind}</em>
                   </button>
                 ))}
               </div>}
@@ -934,23 +1061,25 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
           <div className="lesson-breadcrumb">Learning <i>›</i> {module.title} <i>›</i> Chương {activeLesson.chapter + 1}</div>
           <header><div><span>Bài {activeLesson.lesson + 1}</span><h2>{selected.title}</h2></div><em className={`lesson-kind kind-${selected.kind.toLowerCase()}`}>{selected.kind}</em></header>
           <nav><button className={lessonTab === "content" ? "active" : ""} onClick={() => setLessonTab("content")}>Nội dung</button><button className={lessonTab === "example" ? "active" : ""} onClick={() => setLessonTab("example")}>Ví dụ</button></nav>
-          {lessonTab === "content" ? <section className="lesson-sample-content">
-            <span>NỘI DUNG MINH HỌA · CHƯA XUẤT BẢN</span>
+          {lessonTab === "content" ? <section className={`lesson-sample-content ${isComputerVisionFundamentals ? "lesson-authored-content" : ""}`}>
+            <span>{isComputerVisionFundamentals ? "NỘI DUNG ĐÃ BIÊN SOẠN · COMPUTER VISION FUNDAMENTALS" : "NỘI DUNG MINH HỌA · CHƯA XUẤT BẢN"}</span>
             <h3>1. Mục tiêu của bài học</h3>
-            <p>Bài học giới thiệu cách đặt <b>{selected.title.toLowerCase()}</b> trong toàn bộ pipeline của module <b>{module.title}</b>. Người học cần xác định dữ liệu đầu vào, kết quả đầu ra và mối liên hệ của thành phần này với hệ thống Humanoid Robot.</p>
-            <div className="lesson-callout"><Info size={18}/><p><b>Điểm cần ghi nhớ</b> Một thành phần chỉ có ý nghĩa khi giao diện dữ liệu, giả định vận hành và tiêu chí kiểm thử của nó được mô tả rõ ràng.</p></div>
-            <h3>2. Quy trình tiếp cận</h3>
-            <ol><li>Xác định vấn đề và yêu cầu kỹ thuật.</li><li>Thiết kế mô hình hoặc thuật toán tối thiểu.</li><li>Kiểm thử bằng dữ liệu và điều kiện có thể lặp lại.</li><li>Đánh giá sai số trước khi tích hợp vào hệ thống lớn hơn.</li></ol>
-            <p className="lesson-sample-note">Đây là nội dung mẫu để kiểm tra bố cục. Nội dung chuyên môn hoàn chỉnh sẽ thay thế phần này khi dữ liệu của chương được cung cấp.</p>
+            <p>{selected.summary}</p>
+            <ul className="lesson-objectives">{selected.objectives.map((objective) => <li key={objective}><CheckCircle2 size={16}/>{objective}</li>)}</ul>
+            <div className="lesson-callout"><Info size={18}/><p><b>Điểm cần ghi nhớ</b> {selected.concepts.join(" · ")}. Trên robot thật, luôn kiểm tra giả định bằng dữ liệu camera và đo độ trễ thay vì chỉ quan sát kết quả đẹp trên một ảnh.</p></div>
+            <h3>2. Kiến thức trọng tâm</h3>
+            <div className="lesson-concept-grid">{selected.concepts.map((concept, index) => <article key={concept}><span>0{index + 1}</span><b>{concept}</b><p>{index === 0 ? "Nắm định nghĩa, dữ liệu đầu vào, đầu ra và điều kiện áp dụng." : "So sánh lựa chọn kỹ thuật, sai số và ảnh hưởng tới pipeline humanoid."}</p></article>)}</div>
+            <h3>3. Quy trình thực hành</h3>
+            <ol><li>Đọc và kiểm tra metadata, kích thước cùng kiểu dữ liệu đầu vào.</li><li>Triển khai phép biến đổi tối thiểu và lưu lại tham số.</li><li>Kiểm thử trên điều kiện bình thường, thiếu sáng, chuyển động và nhiễu.</li><li>Đo chất lượng đầu ra, thời gian xử lý và xác định failure mode.</li></ol>
             {workspaceName && <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>}
           </section> : <section className="lesson-example-content">
-            <span>VÍ DỤ MINH HỌA</span><h3>Pipeline tối thiểu</h3><pre><code>{`input = load_sample()\nmodel = configure_${selected.kind.toLowerCase()}()\nresult = model.run(input)\nvalidate(result)`}</code></pre><p>Ví dụ chỉ minh họa cấu trúc luồng xử lý; chưa phải mã nguồn thực thi của bài học.</p>
+            <span>VÍ DỤ ỨNG DỤNG · HUMANOID ROBOT</span><h3>{selected.example}</h3><pre><code>{`frame = camera.read()\nassert frame is not None\n\nresult = process(frame)\nlatency_ms = measure_latency(result)\n\nvalidate(result)\nlog_metrics(latency_ms)`}</code></pre><p>Ví dụ mô tả đúng cấu trúc kiểm thử của bài. Với bài Coding hoặc Simulation, workspace đi kèm cho phép tiếp tục triển khai; runtime chưa kết nối sẽ được ghi rõ trong chính workspace.</p>
             {workspaceName && <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>}
           </section>}
         </main>
         <aside className="module-context-panel">
-          <section><header><Info size={17}/><h3>Thông tin bài học</h3></header><dl><div><dt>Phân loại</dt><dd><em className={`lesson-kind kind-${selected.kind.toLowerCase()}`}>{selected.kind}</em></dd></div><div><dt>Tiến độ</dt><dd>Chưa bắt đầu</dd></div><div><dt>Thời lượng</dt><dd>Chưa xác định</dd></div><div><dt>XP</dt><dd>Chưa thiết lập</dd></div></dl></section>
-          <section><header><FileText size={17}/><h3>Tài liệu liên quan</h3></header><div className="module-honest-empty">Chưa có tài liệu được tải lên.</div></section>
+          <section><header><Info size={17}/><h3>Thông tin bài học</h3></header><dl><div><dt>Phân loại</dt><dd><em className={`lesson-kind kind-${selected.kind.toLowerCase()}`}>{selected.kind}</em></dd></div><div><dt>Trạng thái nội dung</dt><dd>{isComputerVisionFundamentals ? "Đã biên soạn" : "Chưa xuất bản"}</dd></div><div><dt>Thời lượng</dt><dd>{selected.duration ? `${selected.duration} phút` : "Chưa xác định"}</dd></div><div><dt>XP</dt><dd>{selected.xp ? `${selected.xp} XP` : "Chưa thiết lập"}</dd></div></dl></section>
+          <section><header><FileText size={17}/><h3>Tài liệu liên quan</h3></header>{isComputerVisionFundamentals ? <div className="module-source-card"><BookOpen size={18}/><div><b>{selected.source}</b><span>Nguồn tham chiếu để biên soạn; nội dung bài được viết lại cho RoboLearn.</span></div></div> : <div className="module-honest-empty">Chưa có tài liệu được tải lên.</div>}</section>
           <section><header><PencilLine size={17}/><h3>Ghi chú</h3></header><div className="module-honest-empty">Chưa có ghi chú cho bài học này.</div></section>
         </aside>
       </div>
@@ -1006,10 +1135,11 @@ function LearningWorkspace({ onOpenRoadmap, initialModule = null, onModuleClosed
                   {phase.stages.map((stage, stageIndex) => {
                     const moduleNumber = phases.slice(0, phaseIndex).reduce((total, item) => total + item.stages.length, 0) + stageIndex + 1;
                     const ModuleIcon = getModuleIcon(track, moduleNumber - 1);
+                    const isReadyModule = track === "perception" && stage[0] === "Computer Vision Fundamentals";
                     return <article key={stage[0]} className="openable-module" onClick={() => setSelectedModule({ track, phase: phase.phase, title: stage[0], description: stage[1], moduleNumber })}>
                       <div className="module-icon"><ModuleIcon size={19}/></div>
                       <div><span>MODULE {String(moduleNumber).padStart(2, "0")}</span><h3>{stage[0]}</h3><p>{stage[1]}</p></div>
-                      <div className="module-data"><b>50 bài mẫu</b><span>Chưa xuất bản</span></div>
+                      <div className="module-data"><b>{isReadyModule ? "56 bài · 7 chương" : "50 bài mẫu"}</b><span>{isReadyModule ? "Đã biên soạn" : "Chưa xuất bản"}</span></div>
                       <div className="module-progress"><i /><b>0%</b></div>
                       <button aria-label={`Mở module ${stage[0]}`} onClick={(event) => { event.stopPropagation(); setSelectedModule({ track, phase: phase.phase, title: stage[0], description: stage[1], moduleNumber }); }}><ArrowRight size={17}/></button>
                     </article>;
@@ -1066,9 +1196,10 @@ function RoadmapWorkspace({ initialTrack = "perception", onOpenModule }: { initi
                   {phase.stages.map((stage, stageIndex) => {
                     const number = phases.slice(0, phaseIndex).reduce((total, item) => total + item.stages.length, 0) + stageIndex + 1;
                     const ModuleIcon = getModuleIcon(track, number - 1);
+                    const isReadyModule = track === "perception" && stage[0] === "Computer Vision Fundamentals";
                     return (
                       <article className="roadmap-stage roadmap-stage-openable" key={stage[0]} onClick={() => onOpenModule?.({ track, phase: phase.phase, title: stage[0], description: stage[1], moduleNumber: number })}>
-                        <div className="stage-top"><span><ModuleIcon size={16}/></span><b>{String(number).padStart(2, "0")}</b><small>PLANNED</small></div>
+                        <div className="stage-top"><span><ModuleIcon size={16}/></span><b>{String(number).padStart(2, "0")}</b><small>{isReadyModule ? "AUTHORED" : "PLANNED"}</small></div>
                         <h3>{stage[0]}</h3>
                         <p>{stage[1]}</p>
                         <footer><i><b style={{ width: "0%" }} /></i><span>0%</span></footer>

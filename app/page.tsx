@@ -67,6 +67,9 @@ import {
   RadioTower,
   Ruler,
   Rocket,
+  Star,
+  Pin,
+  Archive,
   RotateCcw,
   Route,
   Search,
@@ -598,6 +601,10 @@ type RoboProject = {
   topics?: string[];
   teamMember?: string;
   deadline?: string;
+  favorite?: boolean;
+  pinned?: boolean;
+  archived?: boolean;
+  taskCount?: number;
   progress: number;
   createdAt: string;
   updatedAt: string;
@@ -616,6 +623,7 @@ function ProjectsWorkspace() {
   const [sort, setSort] = useState("newest");
   const [topicsExpanded, setTopicsExpanded] = useState(false);
   const [topicFilter, setTopicFilter] = useState("Tất cả chủ đề");
+  const [quickFilter, setQuickFilter] = useState("All");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [showCreate, setShowCreate] = useState(false);
   const [draft, setDraft] = useState({ title: "", description: "", track: "AI Perception", technologies: "Python, OpenCV", difficulty: "Trung bình" as RoboProject["difficulty"], priority: "Trung bình" as NonNullable<RoboProject["priority"]>, module: "Computer Vision", topics: "Image Processing, Camera Geometry", teamMember: "", deadline: "" });
@@ -638,7 +646,9 @@ function ProjectsWorkspace() {
       const projectTopicSet = [project.module, ...(project.topics ?? []), ...project.technologies].filter(Boolean);
       const matchesTopic = topicFilter === "Tất cả chủ đề" || projectTopicSet.includes(topicFilter);
       const matchesQuery = !normalized || `${project.title} ${project.description} ${project.track} ${projectTopicSet.join(" ")}`.toLowerCase().includes(normalized);
-      return matchesTopic && matchesQuery;
+      const recentlyUpdated = Date.now() - new Date(project.updatedAt).getTime() <= 7 * 86400000;
+      const matchesQuick = quickFilter === "Favorites" ? project.favorite && !project.archived : quickFilter === "Recently Opened" ? recentlyUpdated && !project.archived : quickFilter === "Pinned" ? project.pinned && !project.archived : quickFilter === "Archived" ? project.archived : !project.archived;
+      return matchesTopic && matchesQuery && matchesQuick;
     });
     return [...result].sort((a, b) => {
       if (sort === "progress") return b.progress - a.progress;
@@ -648,7 +658,7 @@ function ProjectsWorkspace() {
       if (sort === "deadline") return (a.deadline || "9999").localeCompare(b.deadline || "9999");
       return b.updatedAt.localeCompare(a.updatedAt);
     });
-  }, [projects, topicFilter, query, sort]);
+  }, [projects, topicFilter, quickFilter, query, sort]);
 
   const topicCounts = useMemo(() => projectTopics.map((topic) => ({
     topic,
@@ -684,6 +694,10 @@ function ProjectsWorkspace() {
     persist(projects.map((item) => item.id === project.id ? { ...item, progress: Math.min(100, Math.max(0, item.progress + change)), updatedAt: new Date().toISOString() } : item));
   };
 
+  const toggleProjectMeta = (project: RoboProject, field: "favorite" | "pinned" | "archived") => {
+    persist(projects.map((item) => item.id === project.id ? { ...item, [field]: !item[field], updatedAt: new Date().toISOString() } : item));
+  };
+
   const deleteProject = (project: RoboProject) => {
     if (!window.confirm(`Xóa project "${project.title}"?`)) return;
     persist(projects.filter((item) => item.id !== project.id));
@@ -714,6 +728,10 @@ function ProjectsWorkspace() {
   const completed = projects.filter((project) => project.progress === 100).length;
   const active = projects.filter((project) => project.progress > 0 && project.progress < 100).length;
   const planned = projects.filter((project) => project.progress === 0).length;
+  const totalTasks = projects.reduce((sum, project) => sum + (project.taskCount ?? 0), 0);
+  const averageProgress = projects.length ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / projects.length) : 0;
+  const upcomingDeadline = projects.filter((project) => project.deadline && !project.archived && project.progress < 100).sort((a, b) => (a.deadline ?? "").localeCompare(b.deadline ?? ""))[0];
+  const activeModule = projects.find((project) => project.progress > 0 && project.progress < 100)?.module;
 
   return (
     <section className="projects-workspace">
@@ -722,9 +740,16 @@ function ProjectsWorkspace() {
         <div className="projects-header-actions"><label className="project-search"><Search size={17}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm kiếm project..." /></label><button className="new-project-button" onClick={() => setShowCreate(true)}><Plus size={18}/> New Project</button></div>
       </header>
 
+      <div className="project-kpi-strip">
+        <div><BriefcaseBusiness size={18}/><p><b>{projects.filter((project) => !project.archived).length}</b><span>Projects</span></p></div>
+        <div><CheckCircle2 size={18}/><p><b>{totalTasks}</b><span>Tasks</span></p></div>
+        <div><CircleGauge size={18}/><p><b>{averageProgress}%</b><span>Progress</span></p></div>
+        <div><Activity size={18}/><p><b>{active}</b><span>Active</span></p></div>
+      </div>
+
       <div className="project-filters">
         <button className={topicFilter === "Tất cả chủ đề" ? "active" : ""} onClick={() => setTopicFilter("Tất cả chủ đề")}>Tất cả</button>
-        {projectTopics.slice(0, 7).map((topic) => <button className={topicFilter === topic ? "active" : ""} onClick={() => setTopicFilter(topic)} key={topic}>{topic}</button>)}
+        {projectTopics.slice(0, 4).map((topic) => <button className={topicFilter === topic ? "active" : ""} onClick={() => setTopicFilter(topic)} key={topic}>{topic}</button>)}
         <button className="topic-expand" aria-expanded={topicsExpanded} onClick={() => setTopicsExpanded((value) => !value)}>{topicsExpanded ? <>Collapse <ChevronUp size={15}/></> : <>Expand <ChevronDown size={15}/></>}</button>
       </div>
       {topicsExpanded && <div className="project-topic-panel">
@@ -732,18 +757,21 @@ function ProjectsWorkspace() {
         {topicCounts.map(({ topic, count }) => <button className={topicFilter === topic ? "active" : ""} onClick={() => setTopicFilter(topic)} key={topic}>{topic} <span>{count}</span></button>)}
         <button className="topic-collapse" onClick={() => setTopicsExpanded(false)}>Collapse <ChevronUp size={15}/></button>
       </div>}
+      <div className="project-quick-filters">
+        {["All", "Favorites", "Recently Opened", "Pinned", "Archived"].map((item) => <button className={quickFilter === item ? "active" : ""} onClick={() => setQuickFilter(item)} key={item}>{item === "Favorites" && "★ "}{item}</button>)}
+      </div>
 
       <div className="projects-layout">
         <main className="projects-main">
           <div className="projects-toolbar"><h2>{topicFilter !== "Tất cả chủ đề" ? topicFilter : "Tất cả project"} <span>({visibleProjects.length})</span></h2><div><span className="sort-label">Sort</span><select value={sort} onChange={(e) => setSort(e.target.value)}><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="name">Name A–Z</option><option value="progress">Progress</option><option value="status">Status</option><option value="deadline">Deadline</option></select><button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><LayoutDashboard size={17}/></button><button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={17}/></button></div></div>
           {visibleProjects.length === 0 ? (
-            <div className="projects-empty"><div><BriefcaseBusiness size={30}/></div><h2>{projects.length ? "Không tìm thấy project phù hợp" : "Chưa có project nào"}</h2><p>{projects.length ? "Thử đổi bộ lọc hoặc từ khóa tìm kiếm." : "Tạo project đầu tiên để bắt đầu áp dụng curriculum vào sản phẩm thực tế."}</p>{!projects.length && <button onClick={() => setShowCreate(true)}><Plus size={17}/> Tạo project đầu tiên</button>}</div>
+            <div className="projects-empty"><div><BriefcaseBusiness size={30}/></div><h2>{projects.length ? "Không tìm thấy project phù hợp" : "Start your first robotics project"}</h2><p>{projects.length ? "Thử đổi chủ đề, quick filter hoặc từ khóa tìm kiếm." : "Biến một module trong Learning thành hệ thống có thể chạy, kiểm thử và cải tiến."}</p><div className="empty-project-metrics"><span><b>0</b>Project</span><span><b>0</b>Task</span><span><b>0%</b>Progress</span></div>{!projects.length && <button onClick={() => setShowCreate(true)}><Plus size={17}/> Tạo project đầu tiên</button>}</div>
           ) : (
             <div className={`project-collection ${view}`}>
               {visibleProjects.map((project, index) => (
                 <article className="project-card" key={project.id}>
                   <div className={`project-art art-${index % 6}`}><span>{project.track}</span><div className="project-nodes"><i/><i/><i/><i/></div></div>
-                  <div className="project-card-body"><header><h3>{project.title}</h3><button aria-label={`Xóa ${project.title}`} onClick={() => deleteProject(project)}><Trash2 size={16}/></button></header><p>{project.description || "Chưa có mô tả."}</p><div className="project-progress"><i><b style={{ width: `${project.progress}%` }}/></i><strong>{project.progress}%</strong></div><div className="project-tags">{[project.module,...(project.topics ?? []),...project.technologies].filter(Boolean).slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}</div><footer><span>{project.difficulty}</span><small>{projectStatus(project)}</small><div><button onClick={() => updateProgress(project, -10)}>−10</button><button onClick={() => updateProgress(project, 10)}>+10</button></div></footer></div>
+                  <div className="project-card-body"><header><h3>{project.title}</h3><div className="project-card-actions"><button className={project.favorite ? "selected" : ""} aria-label={`Favorite ${project.title}`} onClick={() => toggleProjectMeta(project,"favorite")}><Star size={15}/></button><button className={project.pinned ? "selected" : ""} aria-label={`Pin ${project.title}`} onClick={() => toggleProjectMeta(project,"pinned")}><Pin size={15}/></button><button aria-label={`Archive ${project.title}`} onClick={() => toggleProjectMeta(project,"archived")}><Archive size={15}/></button><button aria-label={`Xóa ${project.title}`} onClick={() => deleteProject(project)}><Trash2 size={15}/></button></div></header><p>{project.description || "Chưa có mô tả."}</p><div className="project-progress"><i><b style={{ width: `${project.progress}%` }}/></i><strong>{project.progress}%</strong></div><div className="project-tags">{[project.module,...(project.topics ?? []),...project.technologies].filter(Boolean).slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div><footer><span>{project.difficulty}</span><small>{projectStatus(project)}</small><div><button onClick={() => updateProgress(project, -10)}>−10</button><button onClick={() => updateProgress(project, 10)}>+10</button></div></footer></div>
                 </article>
               ))}
             </div>
@@ -752,6 +780,7 @@ function ProjectsWorkspace() {
 
         <aside className="projects-side">
           <section className="projects-side-card project-summary"><h3>Tổng quan dự án</h3><div className="project-donut" style={{ background: `conic-gradient(#36d57c 0 ${completed / Math.max(1, projects.length) * 100}%,#8154ed 0 ${(completed + active) / Math.max(1, projects.length) * 100}%,#283246 0)` }}><b>{projects.length}</b><span>Dự án</span></div><dl><div><dt><i className="green"/>Hoàn thành</dt><dd>{completed}</dd></div><div><dt><i className="purple"/>Đang làm</dt><dd>{active}</dd></div><div><dt><i/>Chưa bắt đầu</dt><dd>{planned}</dd></div></dl></section>
+          <section className="projects-side-card project-pulse"><h3>Workspace Pulse</h3><dl><div><dt>Upcoming Deadline</dt><dd>{upcomingDeadline?.deadline ? new Intl.DateTimeFormat("vi-VN",{day:"2-digit",month:"short"}).format(new Date(upcomingDeadline.deadline)) : "Chưa có"}</dd></div><div><dt>Current Sprint</dt><dd>{active ? `${active} active` : "Chưa bắt đầu"}</dd></div><div><dt>Active Module</dt><dd>{activeModule ?? "Chưa chọn"}</dd></div><div><dt>Hours Learned</dt><dd>0 giờ</dd></div></dl></section>
           <section className="projects-side-card"><h3>Dự án gần đây</h3>{projects.length ? projects.slice(0, 3).map((project) => <div className="recent-project" key={project.id}><span>{project.title.slice(0,1)}</span><p><b>{project.title}</b><small>{project.track} · {project.progress}%</small></p></div>) : <div className="side-project-empty">Chưa có hoạt động project.</div>}</section>
           <section className="projects-side-card project-tools"><h3>Công cụ nhanh</h3><button onClick={() => setShowCreate(true)}><Plus size={16}/> Tạo Project mới</button><label><span>⇧</span> Import Project<input type="file" accept=".json,application/json" onChange={(e) => importProjects(e.target.files?.[0])}/></label><button onClick={exportProjects} disabled={!projects.length}><span>⇩</span> Export Projects</button></section>
         </aside>

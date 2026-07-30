@@ -287,8 +287,77 @@ const controlRoadmap = [
   ]},
 ];
 
-function RoadmapWorkspace() {
+const perceptionLearningModules = [
+  ["Computer Vision Foundations", "Images, pixels, filtering, features and OpenCV"],
+  ["Camera Geometry", "Projection, calibration, distortion and coordinate frames"],
+  ["Stereo & RGB-D Vision", "Disparity, depth and 3D reconstruction"],
+  ["3D Perception", "Point clouds, registration and scene understanding"],
+  ["Detection, Pose & Tracking", "Objects, humans, 6D pose and temporal tracking"],
+  ["Deep Learning for Vision", "CNN, Transformer and self-supervised learning"],
+  ["VLM & Embodied Reasoning", "Grounding, visual language and spatial reasoning"],
+  ["VLA & Humanoid Integration", "Action policies, imitation and real-time deployment"],
+];
+
+const controlLearningModules = [
+  ["Robotics Math", "Linear algebra, transforms, Lie groups and numerical methods"],
+  ["Robot Kinematics", "Forward/inverse kinematics and Jacobians"],
+  ["Robot Dynamics", "Rigid body dynamics, contacts and constraints"],
+  ["Planning & State Estimation", "Trajectories, search, Kalman filters and fusion"],
+  ["Classical & Optimal Control", "PID, state space, LQR and MPC"],
+  ["Whole-Body Motion", "Balance, locomotion and manipulation"],
+  ["ROS 2 & Simulation", "ROS 2, MuJoCo, Gazebo, Isaac Sim and URDF"],
+  ["RL, Sim-to-Real & Deployment", "Policy learning, adaptation, safety and hardware"],
+];
+
+function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "perception" | "control") => void }) {
   const [track, setTrack] = useState<"perception" | "control">("perception");
+  const isPerception = track === "perception";
+  const modules = isPerception ? perceptionLearningModules : controlLearningModules;
+  const TrackIcon = isPerception ? Eye : Gamepad2;
+
+  return (
+    <section className={`learning-workspace learning-${track}`}>
+      <header className="learning-header">
+        <div><span>LEARNING SPACE</span><h1>Learning <i>›</i> <em>{isPerception ? "AI Perception" : "Control & Simulation"}</em></h1><p>{isPerception ? "Học cách để Humanoid nhìn, hiểu và hành động trong thế giới thực." : "Học mô phỏng, lập kế hoạch và điều khiển chuyển động Humanoid."}</p></div>
+        <div className="learning-tabs" role="tablist"><button className={isPerception ? "active" : ""} onClick={() => setTrack("perception")}><Eye size={18}/>AI Perception</button><button className={!isPerception ? "active" : ""} onClick={() => setTrack("control")}><Gamepad2 size={18}/>Control & Simulation</button></div>
+      </header>
+
+      <div className="learning-layout">
+        <div className="learning-primary">
+          <section className="learning-overview">
+            <div className="learning-zero-ring"><b>0%</b><span>Chưa bắt đầu</span></div>
+            <div className="learning-overview-copy"><span>{isPerception ? "AI PERCEPTION PROGRESS" : "CONTROL & SIMULATION PROGRESS"}</span><h2>Tiến độ học tập</h2><p>Tiến độ sẽ được tính sau khi các bài học đầu tiên được xuất bản.</p><div className="learning-overview-stats"><div><b>0</b><span>Hoàn thành</span></div><div><b>0</b><span>Đang học</span></div><div><b>0 XP</b><span>Đã nhận</span></div></div></div>
+          </section>
+
+          <section className="learning-modules">
+            <header><div><h2>Các Module</h2><span>{modules.length} modules</span></div><p>Curriculum dự kiến · chưa có bài học được xuất bản</p></header>
+            <div className="learning-module-list">
+              {modules.map((module, index) => (
+                <article key={module[0]}>
+                  <div className="module-icon"><TrackIcon size={20}/></div>
+                  <div><span>MODULE {String(index + 1).padStart(2, "0")}</span><h3>{module[0]}</h3><p>{module[1]}</p></div>
+                  <div className="module-data"><b>0 bài</b><span>Chưa xuất bản</span></div>
+                  <div className="module-xp"><b>— XP</b><span>Chưa gán</span></div>
+                  <button aria-label={`Mở module ${module[0]}`} disabled><ArrowRight size={17}/></button>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <aside className="learning-side">
+          <section className="learning-side-card track-about"><header><TrackIcon size={18}/><h3>Giới thiệu lộ trình</h3></header><p>{isPerception ? "Từ thị giác máy tính, không gian 3D và deep learning đến VLM, VLA cho Humanoid." : "Từ cơ học robot và control đến MuJoCo, whole-body motion và triển khai phần cứng."}</p><button onClick={() => onOpenRoadmap(track)}>Xem Roadmap chi tiết <ArrowRight size={15}/></button></section>
+          <section className="learning-side-card quick-learning"><header><CircleGauge size={18}/><h3>Thống kê nhanh</h3></header><dl><div><dt>Tổng bài học</dt><dd>0</dd></div><div><dt>Thời gian học</dt><dd>0 phút</dd></div><div><dt>XP hiện tại</dt><dd>0 XP</dd></div><div><dt>Module khả dụng</dt><dd>0 / {modules.length}</dd></div></dl></section>
+          <section className="learning-side-card"><header><Lightbulb size={18}/><h3>Gợi ý tiếp theo</h3></header><div className="learning-suggestion"><span>1</span><p><b>{modules[0][0]}</b><small>{modules[0][1]}</small></p></div><button className="disabled-action" disabled>Đang chờ bài học</button></section>
+          <section className="learning-side-card"><header><History size={18}/><h3>Hoạt động gần đây</h3></header><div className="learning-empty-activity"><span>○</span><p><b>Chưa có hoạt động</b><small>Hoạt động học và XP sẽ được ghi nhận tại đây.</small></p></div></section>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "perception" | "control" }) {
+  const [track, setTrack] = useState<"perception" | "control">(initialTrack);
   const isPerception = track === "perception";
   const phases = isPerception ? perceptionRoadmap : controlRoadmap;
   const TrackIcon = isPerception ? Eye : Gamepad2;
@@ -380,6 +449,7 @@ function RoadmapWorkspace() {
 
 function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [activeNav, setActiveNav] = useState("Dashboard");
+  const [roadmapTrack, setRoadmapTrack] = useState<"perception" | "control">("perception");
   const [profileOpen, setProfileOpen] = useState(false);
   const [theme, setTheme] = useState<DashboardTheme>("system");
   const [monthCursor, setMonthCursor] = useState(() => new Date());
@@ -495,8 +565,10 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
           </header>
         )}
 
-        {activeNav === "Roadmap" ? (
-          <RoadmapWorkspace />
+        {activeNav === "Learning" ? (
+          <LearningWorkspace onOpenRoadmap={(track) => { setRoadmapTrack(track); setActiveNav("Roadmap"); }} />
+        ) : activeNav === "Roadmap" ? (
+          <RoadmapWorkspace initialTrack={roadmapTrack} />
         ) : activeNav !== "Dashboard" ? (
           <div className="standalone-empty">
             {emptyState(

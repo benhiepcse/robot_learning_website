@@ -604,18 +604,18 @@ type RoboProject = {
 };
 
 const projectTracks = ["AI Perception", "3D Vision", "VLM & VLA", "Control", "Simulation", "Humanoid"];
-const projectTopics = ["Computer Vision", "Image Processing", "Camera Geometry", "Depth & Stereo", "3D Geometry", "Machine Learning", "Deep Learning", "Object Detection", "Segmentation", "Tracking", "Pose Estimation", "Sensor Fusion", "VLM", "VLA", "Reinforcement Learning", "Robot Kinematics", "Robot Dynamics", "Control Theory", "Motion Planning", "Whole-Body Control", "Humanoid Locomotion", "MuJoCo", "Gazebo", "ROS2", "Simulation", "Embedded Systems"];
+const projectTopics = [...new Set(
+  [...perceptionRoadmap, ...controlRoadmap].flatMap((phase) => phase.stages.map((stage) => stage[0]))
+)];
 
 const projectStatus = (project: RoboProject) => project.progress === 100 ? "Hoàn thành" : project.progress > 0 ? "Đang làm" : "Chưa bắt đầu";
 
 function ProjectsWorkspace() {
   const [projects, setProjects] = useState<RoboProject[]>([]);
-  const [filter, setFilter] = useState("Tất cả");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("newest");
   const [topicsExpanded, setTopicsExpanded] = useState(false);
   const [topicFilter, setTopicFilter] = useState("Tất cả chủ đề");
-  const [advancedFilters, setAdvancedFilters] = useState({ difficulty: "Tất cả", status: "Tất cả", priority: "Tất cả", created: "Tất cả", updated: "Tất cả", team: "Tất cả" });
   const [view, setView] = useState<"grid" | "list">("grid");
   const [showCreate, setShowCreate] = useState(false);
   const [draft, setDraft] = useState({ title: "", description: "", track: "AI Perception", technologies: "Python, OpenCV", difficulty: "Trung bình" as RoboProject["difficulty"], priority: "Trung bình" as NonNullable<RoboProject["priority"]>, module: "Computer Vision", topics: "Image Processing, Camera Geometry", teamMember: "", deadline: "" });
@@ -634,20 +634,11 @@ function ProjectsWorkspace() {
 
   const visibleProjects = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    const now = Date.now();
-    const withinDays = (date: string, range: string) => range === "Tất cả" || now - new Date(date).getTime() <= Number(range) * 86400000;
     const result = projects.filter((project) => {
-      const matchesFilter = filter === "Tất cả" || (filter === "Hoàn thành" ? project.progress === 100 : project.track === filter);
       const projectTopicSet = [project.module, ...(project.topics ?? []), ...project.technologies].filter(Boolean);
       const matchesTopic = topicFilter === "Tất cả chủ đề" || projectTopicSet.includes(topicFilter);
       const matchesQuery = !normalized || `${project.title} ${project.description} ${project.track} ${projectTopicSet.join(" ")}`.toLowerCase().includes(normalized);
-      const matchesDifficulty = advancedFilters.difficulty === "Tất cả" || project.difficulty === advancedFilters.difficulty;
-      const matchesStatus = advancedFilters.status === "Tất cả" || projectStatus(project) === advancedFilters.status;
-      const matchesPriority = advancedFilters.priority === "Tất cả" || (project.priority ?? "Trung bình") === advancedFilters.priority;
-      const matchesCreated = withinDays(project.createdAt, advancedFilters.created);
-      const matchesUpdated = withinDays(project.updatedAt, advancedFilters.updated);
-      const matchesTeam = advancedFilters.team === "Tất cả" || (advancedFilters.team === "Cá nhân" ? !project.teamMember : project.teamMember === advancedFilters.team);
-      return matchesFilter && matchesTopic && matchesQuery && matchesDifficulty && matchesStatus && matchesPriority && matchesCreated && matchesUpdated && matchesTeam;
+      return matchesTopic && matchesQuery;
     });
     return [...result].sort((a, b) => {
       if (sort === "progress") return b.progress - a.progress;
@@ -657,13 +648,12 @@ function ProjectsWorkspace() {
       if (sort === "deadline") return (a.deadline || "9999").localeCompare(b.deadline || "9999");
       return b.updatedAt.localeCompare(a.updatedAt);
     });
-  }, [projects, filter, topicFilter, query, sort, advancedFilters]);
+  }, [projects, topicFilter, query, sort]);
 
   const topicCounts = useMemo(() => projectTopics.map((topic) => ({
     topic,
     count: projects.filter((project) => project.module === topic || project.topics?.includes(topic) || project.technologies.includes(topic)).length,
   })), [projects]);
-  const teamMembers = useMemo(() => [...new Set(projects.map((project) => project.teamMember).filter(Boolean))] as string[], [projects]);
 
   const createProject = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -733,7 +723,8 @@ function ProjectsWorkspace() {
       </header>
 
       <div className="project-filters">
-        {["Tất cả", ...projectTracks, "Hoàn thành"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} key={item}>{item}</button>)}
+        <button className={topicFilter === "Tất cả chủ đề" ? "active" : ""} onClick={() => setTopicFilter("Tất cả chủ đề")}>Tất cả</button>
+        {projectTopics.slice(0, 7).map((topic) => <button className={topicFilter === topic ? "active" : ""} onClick={() => setTopicFilter(topic)} key={topic}>{topic}</button>)}
         <button className="topic-expand" aria-expanded={topicsExpanded} onClick={() => setTopicsExpanded((value) => !value)}>{topicsExpanded ? <>Collapse <ChevronUp size={15}/></> : <>Expand <ChevronDown size={15}/></>}</button>
       </div>
       {topicsExpanded && <div className="project-topic-panel">
@@ -742,19 +733,9 @@ function ProjectsWorkspace() {
         <button className="topic-collapse" onClick={() => setTopicsExpanded(false)}>Collapse <ChevronUp size={15}/></button>
       </div>}
 
-      <div className="project-advanced-filters">
-        <span>Bộ lọc</span>
-        <label>Độ khó<select value={advancedFilters.difficulty} onChange={(e) => setAdvancedFilters({...advancedFilters,difficulty:e.target.value})}><option>Tất cả</option><option>Dễ</option><option>Trung bình</option><option>Khó</option><option>Rất khó</option></select></label>
-        <label>Trạng thái<select value={advancedFilters.status} onChange={(e) => setAdvancedFilters({...advancedFilters,status:e.target.value})}><option>Tất cả</option><option>Chưa bắt đầu</option><option>Đang làm</option><option>Hoàn thành</option></select></label>
-        <label>Ưu tiên<select value={advancedFilters.priority} onChange={(e) => setAdvancedFilters({...advancedFilters,priority:e.target.value})}><option>Tất cả</option><option>Thấp</option><option>Trung bình</option><option>Cao</option></select></label>
-        <label>Ngày tạo<select value={advancedFilters.created} onChange={(e) => setAdvancedFilters({...advancedFilters,created:e.target.value})}><option value="Tất cả">Mọi thời điểm</option><option value="7">7 ngày qua</option><option value="30">30 ngày qua</option><option value="90">90 ngày qua</option></select></label>
-        <label>Cập nhật<select value={advancedFilters.updated} onChange={(e) => setAdvancedFilters({...advancedFilters,updated:e.target.value})}><option value="Tất cả">Mọi thời điểm</option><option value="7">7 ngày qua</option><option value="30">30 ngày qua</option><option value="90">90 ngày qua</option></select></label>
-        <label>Thành viên<select value={advancedFilters.team} onChange={(e) => setAdvancedFilters({...advancedFilters,team:e.target.value})}><option>Tất cả</option><option>Cá nhân</option>{teamMembers.map((member) => <option key={member}>{member}</option>)}</select></label>
-      </div>
-
       <div className="projects-layout">
         <main className="projects-main">
-          <div className="projects-toolbar"><h2>{topicFilter !== "Tất cả chủ đề" ? topicFilter : filter === "Tất cả" ? "Tất cả project" : filter} <span>({visibleProjects.length})</span></h2><div><span className="sort-label">Sort</span><select value={sort} onChange={(e) => setSort(e.target.value)}><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="name">Name A–Z</option><option value="progress">Progress</option><option value="status">Status</option><option value="deadline">Deadline</option></select><button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><LayoutDashboard size={17}/></button><button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={17}/></button></div></div>
+          <div className="projects-toolbar"><h2>{topicFilter !== "Tất cả chủ đề" ? topicFilter : "Tất cả project"} <span>({visibleProjects.length})</span></h2><div><span className="sort-label">Sort</span><select value={sort} onChange={(e) => setSort(e.target.value)}><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="name">Name A–Z</option><option value="progress">Progress</option><option value="status">Status</option><option value="deadline">Deadline</option></select><button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><LayoutDashboard size={17}/></button><button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={17}/></button></div></div>
           {visibleProjects.length === 0 ? (
             <div className="projects-empty"><div><BriefcaseBusiness size={30}/></div><h2>{projects.length ? "Không tìm thấy project phù hợp" : "Chưa có project nào"}</h2><p>{projects.length ? "Thử đổi bộ lọc hoặc từ khóa tìm kiếm." : "Tạo project đầu tiên để bắt đầu áp dụng curriculum vào sản phẩm thực tế."}</p>{!projects.length && <button onClick={() => setShowCreate(true)}><Plus size={17}/> Tạo project đầu tiên</button>}</div>
           ) : (

@@ -7,6 +7,10 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://robocode-learning.dang-bui2810at.chatgpt.site"),
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/favicon.svg",
+  },
   title: "RoboLearn — Master Robotics",
   description: "Nền tảng học code tương tác dành cho AI Perception, Control, Simulation và Humanoid Robotics.",
   openGraph: {

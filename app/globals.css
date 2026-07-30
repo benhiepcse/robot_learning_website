@@ -522,10 +522,10 @@ code { font-family:var(--font-geist-mono); }
 @media(max-width:1550px){.continue-vision-art{width:46%;opacity:.65}}
 
 /* Unified Lucide sidebar icons */
-.real-dashboard .dash-nav button>span{display:grid;place-items:center;flex:0 0 24px;color:currentColor}
-.real-dashboard .dash-nav button>span svg{width:20px;height:20px;stroke:currentColor;transition:transform .2s ease,filter .2s ease}
-.real-dashboard .dash-nav button:hover>span svg{transform:scale(1.08)}
-.real-dashboard .dash-nav button.active>span svg{filter:drop-shadow(0 0 6px #9b7aff80)}
+.real-dashboard .dash-nav button>span:first-child{display:grid;place-items:center;flex:0 0 24px;color:currentColor}
+.real-dashboard .dash-nav button>span:first-child svg{width:20px;height:20px;stroke:currentColor;transition:transform .2s ease,filter .2s ease}
+.real-dashboard .dash-nav button:hover>span:first-child svg{transform:scale(1.08)}
+.real-dashboard .dash-nav button.active>span:first-child svg{filter:drop-shadow(0 0 6px #9b7aff80)}
 
 /* Dual-track robotics roadmap */
 .roadmap-workspace{--track:#8b5cf6;--track-rgb:139,92,246;min-width:0;height:100%;padding:30px 32px 42px;overflow:auto;color:var(--dash-text);background:radial-gradient(800px 400px at 42% 0%,rgba(var(--track-rgb),.09),transparent 65%)}

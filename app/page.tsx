@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-function LoginScreen({ onLogin }: { onLogin: () => void }) {
+function LoginScreen({ onLogin }: { onLogin: (username: string) => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [username, setUsername] = useState("");
@@ -20,12 +20,12 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ username, password, remember }),
       });
-      const result = await response.json() as { ok: boolean; message?: string };
+      const result = await response.json() as { ok: boolean; message?: string; username?: string };
       if (!response.ok) {
         setError(result.message ?? "Không thể đăng nhập.");
         return;
       }
-      onLogin();
+      onLogin(result.username ?? username.trim().toLowerCase());
     } catch {
       setError("Không thể kết nối tới máy chủ.");
     } finally {
@@ -106,6 +106,108 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+const dashboardNav = [
+  ["⌂", "Dashboard"],
+  ["▣", "Learning"],
+  ["⌘", "Roadmap"],
+  ["▤", "Projects"],
+  ["♧", "Collaboration"],
+  ["▧", "Knowledge Vault"],
+  ["♢", "Project Tracker"],
+  ["⚙", "Settings"],
+] as const;
+
+function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
+  const [activeNav, setActiveNav] = useState("Dashboard");
+  const displayName = username === "phanthethong" ? "Thế Thông" : "Ben Hiệp";
+  const firstName = displayName.split(" ").at(-1);
+  const heatCells = Array.from({ length: 84 }, (_, index) => (index * 7 + Math.floor(index / 6) * 3) % 5);
+  const projects = [
+    ["P13 Multi-Camera Fusion", "45%", "robot"],
+    ["P14 RGB-D Perception", "30%", "cloud"],
+    ["P15 3D Scene Understanding", "15%", "scene"],
+    ["P16 Stereo Depth Estimation", "60%", "depth"],
+  ];
+
+  return (
+    <main className="robo-dashboard">
+      <aside className="dash-sidebar">
+        <div className="dash-brand"><div className="dash-r">R</div><div><b>RoboLearn</b><small>Learn · Build · Innovate</small></div></div>
+        <nav className="dash-nav">
+          {dashboardNav.map(([icon, label]) => (
+            <button key={label} className={activeNav === label ? "active" : ""} onClick={() => setActiveNav(label)}>
+              <span>{icon}</span>{label}
+            </button>
+          ))}
+        </nav>
+        <div className="dash-profile">
+          <div className="profile-avatar">{displayName.split(" ").map((part) => part[0]).join("")}</div>
+          <div><b>{displayName}</b><small>Level 8 · 2,450 XP</small></div>
+          <em>PRO</em>
+        </div>
+        <div className="theme-switch"><span>Theme</span><div><button className="active">☀</button><button>◐</button><button>☾</button></div></div>
+        <button className="dash-logout" onClick={onLogout}>↪ Đăng xuất</button>
+      </aside>
+
+      <section className="dash-main">
+        <header className="dash-header">
+          <div><h1>Chào lại, {displayName}! <span>👋</span></h1><p>Hôm nay là một ngày tuyệt vời để học và xây dựng robot!</p></div>
+          <div className="header-metrics">
+            <button className="track-select"><span>◇</span><small>Current Track</small><b>AI Perception</b><i>⌄</i></button>
+            <div className="metric"><b>🔥 18 Days</b><small>Current Streak</small><i>Best: 32 Days</i></div>
+            <div className="metric xp"><b>2,450 XP</b><small>Top 23% · +120 XP hôm nay</small><i>▥</i></div>
+          </div>
+        </header>
+
+        <div className="dash-content">
+          <div className="dash-center">
+            {activeNav !== "Dashboard" && (
+              <div className="section-placeholder"><span>{dashboardNav.find((item) => item[1] === activeNav)?.[0]}</span><h2>{activeNav}</h2><p>Khu vực này đã được cố định trong hệ thống và sẽ được xây dựng ở bước tiếp theo.</p><button onClick={() => setActiveNav("Dashboard")}>← Về Dashboard</button></div>
+            )}
+            {activeNav === "Dashboard" && <>
+              <section className="continue-card">
+                <h2>Tiếp tục học</h2>
+                <div className="continue-body">
+                  <div className="course-thumb" />
+                  <div className="course-info"><span>AI Perception</span><h3>P12 Pose Estimation Toolkit</h3><p>Task 3.2 · <b>EPnP Solver</b></p><small>Tiếp tục từ: 3.2 SolvePnP với RANSAC</small><div className="course-progress"><i /><b>65%</b></div><button>▷ &nbsp; Tiếp tục học</button><em>◷ 18 phút ước tính</em></div>
+                  <div className="pose-visual"><i /><i /><i /></div>
+                </div>
+              </section>
+
+              <section className="stat-grid">
+                {[
+                  ["▣","Tổng bài học","128","↑ 12 so với tuần trước","purple"],
+                  ["▤","Bài học hoàn thành","86","↑ 8 so với tuần trước","blue"],
+                  ["◇","Project đang làm","4","— không đổi","green"],
+                  ["◉","Project hoàn thành","7","↑ 1 so với tuần trước","orange"],
+                  ["◷","Thời gian học","56h 30m","↑ 6h so với tuần trước","violet"],
+                ].map((item) => <div className={`stat-card ${item[4]}`} key={item[1]}><span>{item[0]}</span><p><small>{item[1]}</small><b>{item[2]}</b><em>{item[3]}</em></p></div>)}
+              </section>
+
+              <div className="analytics-grid">
+                <section className="dash-card progress-card"><h2>Tiến độ học tập</h2><div className="donut"><b>72%</b><small>Hoàn thành</small></div><ul><li><i className="purple"/>Hoàn thành <b>72%</b></li><li><i className="blue"/>Đang học <b>18%</b></li><li><i className="gray"/>Chưa bắt đầu <b>10%</b></li></ul><button>Xem chi tiết →</button></section>
+                <section className="dash-card heatmap-card"><h2>Lịch sử học tập <span>(Heatmap)</span></h2><div className="heat-labels"><span>T2</span><span>T4</span><span>T6</span><span>CN</span></div><div className="heatmap">{heatCells.map((level,index)=><i key={index} className={`l${level}`}/>)}</div><div className="heat-legend">Ít <i/><i className="l2"/><i className="l3"/><i className="l4"/> Nhiều</div></section>
+              </div>
+
+              <section className="dash-card recent-projects"><h2>Project gần đây</h2><div className="project-row">{projects.map((project)=><article key={project[0]}><div className={`project-image ${project[2]}`}/><b>{project[0]}</b><div><i style={{width:project[1]}}/><span>{project[1]}</span></div></article>)}<button className="new-project"><span>＋</span>Tạo project mới</button></div></section>
+              <section className="quick-row"><h2>Quick Access</h2><div>{[["▶","Resume Learning"],["⌘","Open Workspace"],["▱","Open Project"],["◇","Simulation Lab"],["▣","Knowledge Vault"]].map((item)=><button key={item[1]}><span>{item[0]}</span>{item[1]}</button>)}</div></section>
+              <div className="robot-tip"><span>☼</span><p><b>Robotics Tip hôm nay</b>Epipolar Geometry giúp giảm không gian tìm kiếm tương ứng trong bài toán Stereo Matching.</p><button>Đọc thêm →</button></div>
+            </>}
+          </div>
+
+          <aside className="dash-right">
+            <section className="dash-card calendar"><header><h2>Lịch học</h2><b>Tháng 7, 2025</b><span>‹ &nbsp;&nbsp;&nbsp; ›</span></header><div className="week">{["T2","T3","T4","T5","T6","T7","CN"].map(d=><b key={d}>{d}</b>)}</div><div className="days">{Array.from({length:35},(_,i)=>{const day=i-1;return <span key={i} className={day===30?"selected":[8,18,25].includes(day)?"marked":day<1||day>31?"muted":""}>{day<1?30:day>31?day-31:day}</span>})}</div></section>
+            <section className="dash-card today"><h2>Hôm nay <span>3 / 5 đã hoàn thành</span></h2>{[["✓","Ôn lại bài 3.2 SolvePnP","done"],["✓","Hoàn thành P13 - Task 2","done"],["✓","Đọc tài liệu Epipolar Geometry","purple"],["○","Review code P12",""],["○","Làm bài tập Stereo Matching",""]].map((t,i)=><div key={i} className={t[2]}><span>{t[0]}</span><p>{t[1]}</p><em>{i===1?"Projects":"AI Perception"}</em></div>)}</section>
+            <section className="dash-card ai-coach"><h2>AI Coach</h2><div className="coach-bot"><i/><i/><span/></div><p>Bạn đã dừng học<br/><b>PnP Solver 2 ngày trước.</b><br/>Tiếp tục ngay để duy trì mạch học nhé! 💪</p><button>Tiếp tục học →</button></section>
+            <section className="dash-card sim-status"><h2>Simulation Status <button>Xem chi tiết →</button></h2>{[["🛰","Isaac Sim","Ready"],["◈","Gazebo","Installed"],["⠿","ROS2","Running (2 nodes)"],["◉","RViz","Connected"]].map(x=><div key={x[1]}><span>{x[0]}</span><b>{x[1]}</b><i/> <small>{x[2]}</small><button>Mở</button></div>)}</section>
+            <section className="dash-card activity"><h2>Hoạt động gần đây</h2>{[["✓","Đã hoàn thành: Distortion Model","+15 XP"],["▶","Đã xem video: Rectification Explained","+10 XP"],["⌘","Code: Calibration Checker","+20 XP"],["★","Hoàn thành bài quiz: Epipolar Constraint","+20 XP"]].map((a,i)=><div key={i}><span>{a[0]}</span><p>{a[1]}<small>{i+2} giờ trước</small></p><b>{a[2]}</b></div>)}</section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 const tracks = [
   { icon: "⌁", name: "Nền tảng", meta: "12 bài", progress: 100, color: "#6c63ff" },
   { icon: "◎", name: "Computer Vision", meta: "24 bài", progress: 38, color: "#7c5cff" },
@@ -141,6 +243,7 @@ const codeLines = [
 
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState("levonghiahiep");
   const [checkingSession, setCheckingSession] = useState(true);
   const [tab, setTab] = useState<"lesson" | "notes">("lesson");
   const [bottomTab, setBottomTab] = useState<"tests" | "output">("tests");
@@ -157,7 +260,13 @@ export default function Home() {
       return;
     }
     fetch("/api/auth/session")
-      .then((response) => setAuthenticated(response.ok))
+      .then(async (response) => {
+        setAuthenticated(response.ok);
+        if (response.ok) {
+          const data = await response.json() as { username?: string };
+          if (data.username) setCurrentUser(data.username);
+        }
+      })
       .catch(() => setAuthenticated(false))
       .finally(() => setCheckingSession(false));
   }, []);
@@ -173,7 +282,8 @@ export default function Home() {
   };
 
   if (checkingSession) return <main className="auth-loading"><div className="login-logo"><span>R</span></div><p>Securing your workspace...</p></main>;
-  if (!authenticated) return <LoginScreen onLogin={() => setAuthenticated(true)} />;
+  if (!authenticated) return <LoginScreen onLogin={(username) => { setCurrentUser(username); setAuthenticated(true); }} />;
+  if (authenticated) return <RoboDashboard username={currentUser} onLogout={async () => { await fetch("/api/auth/logout", { method: "POST" }); setAuthenticated(false); }} />;
 
   return (
     <main className={`app-shell ${focus ? "focus-mode" : ""}`}>

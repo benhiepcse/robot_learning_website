@@ -19,6 +19,9 @@ button, textarea { font: inherit; }
 button { border: 0; cursor: pointer; color: inherit; }
 
 .login-page {
+  --mouse-x:0px;
+  --mouse-y:0px;
+  --tilt-x:0px;
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -38,7 +41,9 @@ button { border: 0; cursor: pointer; color: inherit; }
   background-size:auto 100%;
   background-position:46% center;
   filter: saturate(.88) contrast(1.05);
-  animation:labBreath 12s ease-in-out infinite alternate;
+  transform:translate3d(var(--mouse-x),var(--mouse-y),0) scale(1.035);
+  transition:transform .45s cubic-bezier(.2,.7,.2,1);
+  animation:labBreath 6s ease-in-out infinite alternate;
 }
 .login-vignette {
   position: absolute;
@@ -75,6 +80,18 @@ button { border: 0; cursor: pointer; color: inherit; }
 @keyframes labBreath { from { filter:saturate(.84) contrast(1.04) brightness(.92); } to { filter:saturate(.94) contrast(1.07) brightness(1.01); } }
 @keyframes particleDrift { to { transform:translate3d(45px,-34px,0); } }
 @keyframes fogFloat { to { transform:translate3d(-3%,2%,0) scale(1.06); opacity:.24; } }
+.robot-motion { position:absolute; z-index:1; left:45.5%; top:5%; width:28%; height:88%; pointer-events:none; transform:translate3d(var(--tilt-x),var(--mouse-y),0); transition:transform .55s cubic-bezier(.2,.7,.2,1); }
+.energy-ring { position:absolute; left:50%; bottom:4%; border:1px solid #815aff; border-radius:50%; transform:translateX(-50%) rotateX(68deg); opacity:.5; box-shadow:0 0 18px #704cff,inset 0 0 18px #704cff55; }
+.ring-one { width:76%; height:24%; animation:ringPulse 2.8s ease-out infinite; }
+.ring-two { width:58%; height:18%; animation:ringPulse 2.8s 1.4s ease-out infinite; }
+.robot-scan { position:absolute; left:21%; right:18%; top:13%; height:1px; background:linear-gradient(90deg,transparent,#6eb5ff,#a269ff,transparent); box-shadow:0 0 12px #6b9fff,0 0 28px #7959ff; opacity:0; animation:scanner 4.8s ease-in-out infinite; }
+.robot-core { position:absolute; left:52%; top:27%; width:7px; height:7px; border-radius:50%; background:#7ebcff; box-shadow:0 0 10px #5ca8ff,0 0 24px #674cff,0 0 45px #674cff; animation:corePulse 1.8s ease-in-out infinite alternate; }
+@keyframes ringPulse { 0% { transform:translateX(-50%) rotateX(68deg) scale(.78); opacity:0; } 35% { opacity:.65; } 100% { transform:translateX(-50%) rotateX(68deg) scale(1.18); opacity:0; } }
+@keyframes scanner { 0%,14%,100% { top:13%; opacity:0; } 22% { opacity:.8; } 72% { top:78%; opacity:.5; } 82% { opacity:0; } }
+@keyframes corePulse { to { transform:scale(1.7); opacity:.65; box-shadow:0 0 16px #71b5ff,0 0 36px #674cff,0 0 68px #674cff; } }
+@media (prefers-reduced-motion:reduce) {
+  .login-backdrop,.login-vignette:before,.login-vignette:after,.energy-ring,.robot-scan,.robot-core { animation:none!important; transition:none!important; }
+}
 .login-story, .login-zone { position: relative; z-index: 1; }
 .login-story { padding: 52px 0 72px 62px; display: flex; flex-direction: column; }
 .login-brand { display: flex; align-items: center; gap: 13px; }

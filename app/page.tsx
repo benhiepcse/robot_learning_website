@@ -34,9 +34,29 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <main className="login-page">
+    <main
+      className="login-page"
+      onPointerMove={(event) => {
+        const x = (event.clientX / window.innerWidth - 0.5) * 2;
+        const y = (event.clientY / window.innerHeight - 0.5) * 2;
+        event.currentTarget.style.setProperty("--mouse-x", `${x * 16}px`);
+        event.currentTarget.style.setProperty("--mouse-y", `${y * 10}px`);
+        event.currentTarget.style.setProperty("--tilt-x", `${x * -5}px`);
+      }}
+      onPointerLeave={(event) => {
+        event.currentTarget.style.setProperty("--mouse-x", "0px");
+        event.currentTarget.style.setProperty("--mouse-y", "0px");
+        event.currentTarget.style.setProperty("--tilt-x", "0px");
+      }}
+    >
       <div className="login-backdrop" />
       <div className="login-vignette" />
+      <div className="robot-motion" aria-hidden="true">
+        <i className="energy-ring ring-one" />
+        <i className="energy-ring ring-two" />
+        <i className="robot-scan" />
+        <i className="robot-core" />
+      </div>
 
       <section className="login-story">
         <div className="login-brand">
@@ -145,6 +165,11 @@ export default function Home() {
   const greeting = useMemo(() => (new Date().getHours() < 12 ? "Chào buổi sáng" : "Tiếp tục nào"), []);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("preview") === "login") {
+      setAuthenticated(false);
+      setCheckingSession(false);
+      return;
+    }
     fetch("/api/auth/session")
       .then((response) => setAuthenticated(response.ok))
       .catch(() => setAuthenticated(false))

@@ -91,7 +91,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
           {error && <div className="login-error" role="alert">! &nbsp;{error}</div>}
           <button className="sign-in" type="submit" disabled={loading || !username || !password}><span>→</span> {loading ? "Checking..." : "Sign In"} <i>ENTER ↵</i></button>
-          <div className="secure-line"><span /><b>♢</b> Secure & Private<span /></div>
+          <div className="secure-line"><span /><p><b>♢</b> Secure & Private</p><span /></div>
 
           <div className="login-benefits">
             <div><span>♙</span><p><b>Hands-on Projects</b><small>Real robotics challenges</small></p></div>

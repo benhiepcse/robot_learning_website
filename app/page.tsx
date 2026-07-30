@@ -500,9 +500,9 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
 
   return (
     <section className={`roadmap-workspace roadmap-${track}`}>
+      <div className="roadmap-galaxy" aria-hidden="true" />
       <header className="roadmap-header">
         <div><span>ROBOLEARN CURRICULUM</span><h1>Roadmap</h1><p>Lộ trình kiến thức từ nền tảng đến hệ thống Humanoid hoàn chỉnh.</p></div>
-        <div className="roadmap-summary"><b>0%</b><span>Chưa bắt đầu</span><small>0 / {moduleCount} giai đoạn</small></div>
       </header>
 
       <div className="roadmap-tabs" role="tablist" aria-label="Chọn hướng học">

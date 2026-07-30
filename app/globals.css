@@ -641,6 +641,31 @@ code { font-family:var(--font-geist-mono); }
   .roadmap-header h1{font-size:42px}
 }
 
+/* Immersive Roadmap header art */
+.roadmap-workspace{position:relative;isolation:isolate}
+.roadmap-workspace>*:not(.roadmap-galaxy){position:relative;z-index:1}
+.roadmap-galaxy{
+  position:absolute;
+  z-index:0;
+  top:0;
+  right:0;
+  width:min(74%,1120px);
+  height:290px;
+  pointer-events:none;
+  opacity:.4;
+  background:url("/roadmap-galaxy-v1.png") right 38% center/cover no-repeat;
+  filter:saturate(.88) brightness(.82);
+  mix-blend-mode:screen;
+  mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.18) 18%,#000 52%,rgba(0,0,0,.84) 78%,transparent 100%),linear-gradient(180deg,#000 0,#000 58%,transparent 100%);
+  mask-composite:intersect;
+}
+.roadmap-header{min-height:124px;padding-right:35%}
+.theme-light .roadmap-galaxy{
+  opacity:.13;
+  filter:saturate(.5) contrast(.8) brightness(1.12);
+  mix-blend-mode:multiply;
+}
+
 /* Roadmap cards expand with their content instead of clipping it */
 .roadmap-stage{
   height:auto;

@@ -652,17 +652,18 @@ code { font-family:var(--font-geist-mono); }
   width:min(74%,1120px);
   height:290px;
   pointer-events:none;
-  opacity:.4;
+  opacity:.52;
   background:url("/roadmap-galaxy-v1.png") right 38% center/cover no-repeat;
-  filter:saturate(.88) brightness(.82);
+  filter:saturate(.92) brightness(.9);
   mix-blend-mode:screen;
-  mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.18) 18%,#000 52%,rgba(0,0,0,.84) 78%,transparent 100%),linear-gradient(180deg,#000 0,#000 58%,transparent 100%);
-  mask-composite:intersect;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.28) 20%,#000 48%,#000 78%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.28) 20%,#000 48%,#000 78%,transparent 100%);
 }
 .roadmap-header{min-height:124px;padding-right:35%}
+.roadmap-summary{display:none!important}
 .theme-light .roadmap-galaxy{
-  opacity:.13;
-  filter:saturate(.5) contrast(.8) brightness(1.12);
+  opacity:.2;
+  filter:saturate(.55) contrast(.78) brightness(1.18);
   mix-blend-mode:multiply;
 }
 

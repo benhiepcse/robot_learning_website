@@ -4,9 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   BriefcaseBusiness,
+  ArrowRight,
+  Eye,
+  Gamepad2,
   LayoutDashboard,
   Library,
   Map,
+  Sparkles,
   Settings,
   Tags,
   UsersRound,
@@ -231,6 +235,109 @@ const premiumDashboardNav = [
   { label: "Settings", Icon: Settings },
 ] as const;
 
+const perceptionRoadmap = [
+  { phase: "Phase 1 · Foundations", caption: "Toán, lập trình và thị giác máy tính nền tảng", stages: [
+    ["Programming & Math", "Python, C++, Linux, Linear Algebra"],
+    ["Image Processing", "OpenCV, filtering, features, geometry"],
+    ["Camera Geometry", "Calibration, projection, distortion"],
+    ["Stereo & RGB-D", "Depth, disparity, reconstruction"],
+    ["3D Representation", "Point clouds, meshes, coordinate frames"],
+  ]},
+  { phase: "Phase 2 · Robot Perception", caption: "Hiểu con người, vật thể và không gian 3D", stages: [
+    ["Detection & Segmentation", "Objects, instances, semantic scenes"],
+    ["Pose & Human Understanding", "6D pose, keypoints, body and hands"],
+    ["Multi-Camera Fusion", "Temporal alignment, tracking, sensor fusion"],
+    ["SLAM & Localization", "Visual odometry, mapping, loop closure"],
+    ["Deep Vision Models", "CNN, Transformer, self-supervised learning"],
+  ]},
+  { phase: "Phase 3 · VLM → VLA", caption: "Từ nhìn–hiểu ngôn ngữ đến hành động robot", stages: [
+    ["Vision Transformers", "ViT, encoders, visual tokens"],
+    ["VLM Foundations", "Contrastive learning, grounding, captioning"],
+    ["Embodied Reasoning", "Spatial reasoning, memory, affordances"],
+    ["VLA & Policy Learning", "Action tokens, imitation, diffusion policy"],
+    ["Humanoid Integration", "Real-time pipeline, safety, deployment"],
+  ]},
+];
+
+const controlRoadmap = [
+  { phase: "Phase 1 · Fundamentals", caption: "Cơ học và nền tảng điều khiển robot", stages: [
+    ["Robotics Math", "Frames, transforms, Lie groups"],
+    ["Robot Kinematics", "FK, IK, Jacobian"],
+    ["Robot Dynamics", "Rigid body, inertia, contacts"],
+    ["Motion Planning", "Search, sampling, trajectories"],
+    ["State Estimation", "Kalman filters, sensor fusion"],
+  ]},
+  { phase: "Phase 2 · Control & Simulation", caption: "Mô phỏng, điều khiển và chuyển động toàn thân", stages: [
+    ["ROS 2 Foundations", "Nodes, topics, TF, lifecycle"],
+    ["Simulation Stack", "Gazebo, Isaac Sim, URDF"],
+    ["Optimal Control", "PID, LQR, MPC"],
+    ["Whole-Body Control", "QP, constraints, balance"],
+    ["Locomotion & Manipulation", "Gait, grasping, contacts"],
+  ]},
+  { phase: "Phase 3 · Deployment", caption: "Đưa thuật toán từ mô phỏng lên humanoid thật", stages: [
+    ["Reinforcement Learning", "Simulation RL, reward design"],
+    ["Sim-to-Real", "Randomization, adaptation"],
+    ["Hardware Interfaces", "Sensors, actuators, real-time control"],
+    ["System Integration", "Perception-control synchronization"],
+    ["Safety & Evaluation", "Testing, fallback, benchmarks"],
+  ]},
+];
+
+function RoadmapWorkspace() {
+  const [track, setTrack] = useState<"perception" | "control">("perception");
+  const isPerception = track === "perception";
+  const phases = isPerception ? perceptionRoadmap : controlRoadmap;
+  const TrackIcon = isPerception ? Eye : Gamepad2;
+
+  return (
+    <section className={`roadmap-workspace roadmap-${track}`}>
+      <header className="roadmap-header">
+        <div><span>ROBOLEARN CURRICULUM</span><h1>Roadmap</h1><p>Lộ trình kiến thức từ nền tảng đến hệ thống Humanoid hoàn chỉnh.</p></div>
+        <div className="roadmap-summary"><b>0%</b><span>Chưa bắt đầu</span><small>0 / 15 giai đoạn</small></div>
+      </header>
+
+      <div className="roadmap-tabs" role="tablist" aria-label="Chọn hướng học">
+        <button role="tab" aria-selected={isPerception} className={isPerception ? "active" : ""} onClick={() => setTrack("perception")}><Eye size={19}/> AI Perception → VLM/VLA</button>
+        <button role="tab" aria-selected={!isPerception} className={!isPerception ? "active" : ""} onClick={() => setTrack("control")}><Gamepad2 size={19}/> Control & Simulation</button>
+      </div>
+
+      <div className="roadmap-intro">
+        <div className="roadmap-orb"><TrackIcon size={26}/></div>
+        <div><span>{isPerception ? "AI PERCEPTION TRACK" : "CONTROL & SIMULATION TRACK"}</span><h2>{isPerception ? "Humanoid AI Perception → VLM → VLA" : "Humanoid Control, Simulation & Deployment"}</h2><p>{isPerception ? "Xây dựng năng lực để humanoid nhìn, hiểu ngôn ngữ, suy luận về thế giới và chuyển ý định thành hành động." : "Xây dựng nền tảng để mô phỏng, lập kế hoạch, điều khiển chuyển động và triển khai humanoid an toàn."}</p></div>
+        <Sparkles size={22}/>
+      </div>
+
+      <div className="roadmap-phases">
+        {phases.map((phase, phaseIndex) => (
+          <section className="roadmap-phase" key={phase.phase}>
+            <header><div><span>0{phaseIndex + 1}</span><h2>{phase.phase}</h2></div><p>{phase.caption}</p></header>
+            <div className="roadmap-stage-row">
+              {phase.stages.map((stage, stageIndex) => {
+                const number = phaseIndex * 5 + stageIndex + 1;
+                return (
+                  <article className="roadmap-stage" key={stage[0]}>
+                    <div className="stage-top"><span>{number}</span><small>PLANNED</small></div>
+                    <h3>{stage[0]}</h3>
+                    <p>{stage[1]}</p>
+                    <footer><i><b style={{ width: "0%" }} /></i><span>0%</span></footer>
+                    {stageIndex < phase.stages.length - 1 && <ArrowRight className="stage-arrow" size={17} aria-hidden="true"/>}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <footer className="roadmap-bottom">
+        <div className="roadmap-orb"><TrackIcon size={25}/></div>
+        <div><h2>Đầu ra của lộ trình</h2><p>{isPerception ? "Có thể xây pipeline perception đa camera, hiểu cảnh 3D, tích hợp VLM và huấn luyện VLA cho humanoid." : "Có thể mô phỏng, lập kế hoạch, điều khiển toàn thân và triển khai hệ thống trên humanoid thật."}</p></div>
+        <div className="roadmap-pill"><b>15</b><span>giai đoạn</span></div>
+      </footer>
+    </section>
+  );
+}
+
 function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -348,7 +455,9 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
           </header>
         )}
 
-        {activeNav !== "Dashboard" ? (
+        {activeNav === "Roadmap" ? (
+          <RoadmapWorkspace />
+        ) : activeNav !== "Dashboard" ? (
           <div className="standalone-empty">
             {emptyState(
               activeNav,

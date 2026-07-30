@@ -96,7 +96,6 @@ import {
   Settings,
   Save,
   Sun,
-  Tags,
   Trash2,
   TestTube2,
   UsersRound,
@@ -214,9 +213,6 @@ const dashboardNav = [
   ["▣", "Learning"],
   ["⌘", "Roadmap"],
   ["▤", "Projects"],
-  ["♧", "Collaboration"],
-  ["▧", "Knowledge Vault"],
-  ["♢", "Project Tracker"],
   ["⚙", "Settings"],
 ] as const;
 
@@ -318,9 +314,6 @@ const premiumDashboardNav = [
   { label: "Learning", Icon: BookOpen },
   { label: "Roadmap", Icon: Map },
   { label: "Projects", Icon: BriefcaseBusiness },
-  { label: "Collaboration", Icon: UsersRound },
-  { label: "Knowledge Vault", Icon: Library },
-  { label: "Project Tracker", Icon: Tags },
   { label: "Settings", Icon: Settings },
 ] as const;
 

@@ -117,7 +117,7 @@ const dashboardNav = [
   ["⚙", "Settings"],
 ] as const;
 
-function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
+function LegacyRoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [activeNav, setActiveNav] = useState("Dashboard");
   const displayName = username === "phanthethong" ? "Thế Thông" : "Ben Hiệp";
   const firstName = displayName.split(" ").at(-1);
@@ -203,6 +203,181 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
             <section className="dash-card activity"><h2>Hoạt động gần đây</h2>{[["✓","Đã hoàn thành: Distortion Model","+15 XP"],["▶","Đã xem video: Rectification Explained","+10 XP"],["⌘","Code: Calibration Checker","+20 XP"],["★","Hoàn thành bài quiz: Epipolar Constraint","+20 XP"]].map((a,i)=><div key={i}><span>{a[0]}</span><p>{a[1]}<small>{i+2} giờ trước</small></p><b>{a[2]}</b></div>)}</section>
           </aside>
         </div>
+      </section>
+    </main>
+  );
+}
+
+type DashboardTheme = "light" | "system" | "dark";
+
+function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
+  const [activeNav, setActiveNav] = useState("Dashboard");
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [theme, setTheme] = useState<DashboardTheme>("system");
+  const [monthCursor, setMonthCursor] = useState(() => new Date());
+  const [clockHour, setClockHour] = useState(() => new Date().getHours());
+  const displayName = username === "phanthethong" ? "Thế Thông" : "Ben Hiệp";
+  const initials = displayName.split(" ").map((part) => part[0]).join("");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("robolearn-theme") as DashboardTheme | null;
+    if (saved === "light" || saved === "dark" || saved === "system") setTheme(saved);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("robolearn-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockHour(new Date().getHours()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const resolvedTheme = theme === "system"
+    ? (clockHour >= 6 && clockHour < 18 ? "light" : "dark")
+    : theme;
+
+  const calendar = useMemo(() => {
+    const year = monthCursor.getFullYear();
+    const month = monthCursor.getMonth();
+    const firstMondayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const previousMonthDays = new Date(year, month, 0).getDate();
+    return Array.from({ length: 42 }, (_, index) => {
+      const relativeDay = index - firstMondayIndex + 1;
+      if (relativeDay < 1) return { day: previousMonthDays + relativeDay, muted: true, date: new Date(year, month - 1, previousMonthDays + relativeDay) };
+      if (relativeDay > daysInMonth) return { day: relativeDay - daysInMonth, muted: true, date: new Date(year, month + 1, relativeDay - daysInMonth) };
+      return { day: relativeDay, muted: false, date: new Date(year, month, relativeDay) };
+    });
+  }, [monthCursor]);
+
+  const today = new Date();
+  const isToday = (date: Date) =>
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+
+  const emptyState = (title: string, description: string) => (
+    <div className="real-empty-page">
+      <div className="empty-orbit">◇</div>
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <span>Chưa có dữ liệu</span>
+    </div>
+  );
+
+  return (
+    <main className={`robo-dashboard real-dashboard theme-${resolvedTheme}`}>
+      <aside className="dash-sidebar">
+        <div className="dash-brand"><div className="dash-r">R</div><div><b>RoboLearn</b><small>Learn · Build · Innovate</small></div></div>
+        <nav className="dash-nav" aria-label="Điều hướng chính">
+          {dashboardNav.map(([icon, label]) => (
+            <button key={label} className={activeNav === label ? "active" : ""} onClick={() => setActiveNav(label)}>
+              <span>{icon}</span>{label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="account-area">
+          <button className="dash-profile profile-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={profileOpen}>
+            <div className="profile-avatar">{initials}</div>
+            <div><b>{displayName}</b><small>@{username}</small></div>
+            <em>{profileOpen ? "⌃" : "⌄"}</em>
+          </button>
+          {profileOpen && (
+            <div className="profile-menu">
+              <button onClick={onLogout}><span>↪</span> Đăng xuất</button>
+            </div>
+          )}
+        </div>
+
+        <div className="theme-switch">
+          <span>Giao diện</span>
+          <div>
+            <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")} title="Sáng">☀</button>
+            <button className={theme === "system" ? "active" : ""} onClick={() => setTheme("system")} title="Tự động theo thời gian thực">◐</button>
+            <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} title="Tối">☾</button>
+          </div>
+        </div>
+      </aside>
+
+      <section className="dash-main">
+        <header className="dash-header">
+          <div><h1>Chào lại, {displayName}! <span>👋</span></h1><p>Không gian học Robotics cá nhân của bạn.</p></div>
+          <div className="data-integrity"><i /> Dữ liệu thực · Không dùng số liệu mẫu</div>
+        </header>
+
+        {activeNav !== "Dashboard" ? (
+          <div className="standalone-empty">
+            {emptyState(
+              activeNav,
+              activeNav === "Learning"
+                ? "Chưa có giáo trình được xuất bản. Khi bài học đầu tiên được tạo, nội dung sẽ xuất hiện tại đây."
+                : `Khu vực ${activeNav} chưa có dữ liệu hoặc chức năng được cấu hình.`
+            )}
+          </div>
+        ) : (
+          <div className="dash-content real-content">
+            <div className="dash-center">
+              <section className="continue-card honest-empty">
+                <div className="empty-icon">▷</div>
+                <div><span>TIẾP TỤC HỌC</span><h2>Chưa có bài học đang học</h2><p>Bài học gần nhất sẽ xuất hiện ở đây sau khi bạn bắt đầu nội dung đầu tiên trong Learning.</p></div>
+                <button onClick={() => setActiveNav("Learning")}>Mở Learning →</button>
+              </section>
+
+              <section className="stat-grid honest-stats">
+                {[
+                  ["▣", "Tổng bài học", "0", "Chưa có giáo trình", "purple"],
+                  ["✓", "Bài đã hoàn thành", "0", "Chưa phát sinh", "blue"],
+                  ["◇", "Project đang làm", "0", "Chưa có project", "green"],
+                  ["◎", "Project hoàn thành", "0", "Chưa phát sinh", "orange"],
+                  ["◷", "Thời gian học", "0 phút", "Chưa ghi nhận", "violet"],
+                ].map((item) => <div className={`stat-card ${item[4]}`} key={item[1]}><span>{item[0]}</span><p><small>{item[1]}</small><b>{item[2]}</b><em>{item[3]}</em></p></div>)}
+              </section>
+
+              <div className="analytics-grid fixed-analytics">
+                <section className="dash-card progress-card empty-progress">
+                  <h2>Tiến độ học tập</h2>
+                  <div className="zero-donut"><b>0%</b><small>Chưa bắt đầu</small></div>
+                  <p>Tiến độ sẽ được tính từ số bài hoàn thành trên tổng số bài đã xuất bản.</p>
+                </section>
+                <section className="dash-card heatmap-card empty-heatmap">
+                  <h2>Lịch sử học tập <span>(Heatmap)</span></h2>
+                  <div className="empty-heat-grid">{Array.from({ length: 70 }, (_, index) => <i key={index} />)}</div>
+                  <p>Chưa có phiên học nào được ghi nhận.</p>
+                </section>
+              </div>
+
+              <section className="dash-card honest-projects">
+                <header><div><h2>Project gần đây</h2><p>Project bạn tạo hoặc mở gần đây sẽ hiển thị tại đây.</p></div><button onClick={() => setActiveNav("Projects")}>Mở Projects →</button></header>
+                <div className="empty-project-row"><span>＋</span><b>Chưa có project</b><small>Bắt đầu từ mục Projects khi bạn sẵn sàng.</small></div>
+              </section>
+
+              <section className="quick-row real-quick"><h2>Truy cập nhanh</h2><div>
+                {[["▣","Learning"],["◇","Projects"],["▧","Knowledge Vault"],["⌘","Roadmap"]].map((item) =>
+                  <button key={item[1]} onClick={() => setActiveNav(item[1])}><span>{item[0]}</span>{item[1]}</button>
+                )}
+              </div></section>
+            </div>
+
+            <aside className="dash-right">
+              <section className="dash-card calendar real-calendar">
+                <header>
+                  <h2>Lịch</h2>
+                  <b>{new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(monthCursor)}</b>
+                  <div><button onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))} aria-label="Tháng trước">‹</button><button onClick={() => setMonthCursor(new Date())}>Hôm nay</button><button onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))} aria-label="Tháng sau">›</button></div>
+                </header>
+                <div className="week">{["T2","T3","T4","T5","T6","T7","CN"].map((day) => <b key={day}>{day}</b>)}</div>
+                <div className="days">{calendar.map((cell, index) => <span key={index} className={`${cell.muted ? "muted" : ""} ${isToday(cell.date) ? "selected" : ""}`}>{cell.day}</span>)}</div>
+                <footer>Ngày hiện tại: {new Intl.DateTimeFormat("vi-VN", { dateStyle: "long" }).format(today)}</footer>
+              </section>
+
+              <section className="dash-card honest-side-card"><h2>Lịch học hôm nay</h2><div className="side-empty"><span>○</span><p><b>Chưa có lịch học</b><small>Lịch học sẽ lấy từ các bài và deadline thật trong hệ thống.</small></p></div></section>
+              <section className="dash-card honest-side-card"><h2>Hoạt động gần đây</h2><div className="side-empty"><span>⌁</span><p><b>Chưa có hoạt động</b><small>Các lần học, chạy code và hoàn thành project sẽ được ghi lại tại đây.</small></p></div></section>
+              <section className="dash-card honest-side-card"><h2>Simulation</h2><div className="side-empty"><span>◇</span><p><b>Chưa kết nối</b><small>ROS 2, Gazebo hoặc Isaac Sim chưa được kết nối với website.</small></p></div></section>
+            </aside>
+          </div>
+        )}
       </section>
     </main>
   );

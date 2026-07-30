@@ -516,3 +516,9 @@ code { font-family:var(--font-geist-mono); }
 .continue-vision-art:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#070c160d)}
 .theme-light .continue-vision-art{opacity:.28;mix-blend-mode:multiply}
 @media(max-width:1550px){.continue-vision-art{width:46%;opacity:.65}}
+
+/* Unified Lucide sidebar icons */
+.real-dashboard .dash-nav button>span{display:grid;place-items:center;flex:0 0 24px;color:currentColor}
+.real-dashboard .dash-nav button>span svg{width:20px;height:20px;stroke:currentColor;transition:transform .2s ease,filter .2s ease}
+.real-dashboard .dash-nav button:hover>span svg{transform:scale(1.08)}
+.real-dashboard .dash-nav button.active>span svg{filter:drop-shadow(0 0 6px #9b7aff80)}

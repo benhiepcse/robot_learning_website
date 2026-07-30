@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  BookOpen,
+  BriefcaseBusiness,
+  LayoutDashboard,
+  Library,
+  Map,
+  Settings,
+  Tags,
+  UsersRound,
+} from "lucide-react";
 
 function LoginScreen({ onLogin }: { onLogin: (username: string) => void }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -210,6 +220,17 @@ function LegacyRoboDashboard({ username, onLogout }: { username: string; onLogou
 
 type DashboardTheme = "light" | "system" | "dark";
 
+const premiumDashboardNav = [
+  { label: "Dashboard", Icon: LayoutDashboard },
+  { label: "Learning", Icon: BookOpen },
+  { label: "Roadmap", Icon: Map },
+  { label: "Projects", Icon: BriefcaseBusiness },
+  { label: "Collaboration", Icon: UsersRound },
+  { label: "Knowledge Vault", Icon: Library },
+  { label: "Project Tracker", Icon: Tags },
+  { label: "Settings", Icon: Settings },
+] as const;
+
 function RoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -279,9 +300,9 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
       <aside className="dash-sidebar">
         <div className="dash-brand"><div className="dash-r">R</div><div><b>RoboLearn</b><small>Learn · Build · Innovate</small></div></div>
         <nav className="dash-nav" aria-label="Điều hướng chính">
-          {dashboardNav.map(([icon, label]) => (
+          {premiumDashboardNav.map(({ Icon, label }) => (
             <button key={label} className={activeNav === label ? "active" : ""} onClick={() => setActiveNav(label)}>
-              <span>{icon}</span>{label}
+              <span><Icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>{label}
             </button>
           ))}
         </nav>

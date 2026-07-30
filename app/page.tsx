@@ -218,6 +218,14 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
   const [clockHour, setClockHour] = useState(() => new Date().getHours());
   const displayName = username === "phanthethong" ? "Thế Thông" : "Ben Hiệp";
   const initials = displayName.split(" ").map((part) => part[0]).join("");
+  const totalXp = 0;
+  const xpToday = 0;
+  const currentStreak = 0;
+  const bestStreak = 0;
+  const level = Math.floor(Math.sqrt(totalXp / 100)) + 1;
+  const currentLevelFloor = 100 * Math.pow(level - 1, 2);
+  const nextLevelXp = 100 * Math.pow(level, 2);
+  const levelProgress = Math.round(((totalXp - currentLevelFloor) / (nextLevelXp - currentLevelFloor)) * 100);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("robolearn-theme") as DashboardTheme | null;
@@ -281,7 +289,7 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
         <div className="account-area">
           <button className="dash-profile profile-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={profileOpen}>
             <div className="profile-avatar">{initials}</div>
-            <div><b>{displayName}</b><small>@{username}</small></div>
+            <div><b>{displayName}</b><small>Level {level} · {totalXp.toLocaleString("vi-VN")} XP</small></div>
             <em>{profileOpen ? "⌃" : "⌄"}</em>
           </button>
           {profileOpen && (
@@ -304,7 +312,17 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
       <section className="dash-main">
         <header className="dash-header">
           <div><h1>Chào lại, {displayName}! <span>👋</span></h1><p>Không gian học Robotics cá nhân của bạn.</p></div>
-          <div className="data-integrity"><i /> Dữ liệu thực · Không dùng số liệu mẫu</div>
+          <div className="header-scoreboard">
+            <div className="score-card streak-score">
+              <span>🔥</span><p><b>{currentStreak} Days</b><small>Current Streak</small></p>
+              <i>Best: {bestStreak} Days</i>
+            </div>
+            <div className="score-card xp-score">
+              <p><b>{totalXp.toLocaleString("vi-VN")} XP</b><small>Level {level} · {levelProgress}% đến Level {level + 1}</small></p>
+              <div><b>Chưa xếp hạng</b><small>+{xpToday} XP hôm nay</small></div>
+              <span className="score-bars"><i/><i/><i/><i/></span>
+            </div>
+          </div>
         </header>
 
         {activeNav !== "Dashboard" ? (

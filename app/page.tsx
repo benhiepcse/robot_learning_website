@@ -269,14 +269,14 @@ const controlRoadmap = [
   ]},
   { phase: "Phase 2 · Control & Simulation", caption: "Mô phỏng, điều khiển và chuyển động toàn thân", stages: [
     ["ROS 2 Foundations", "Nodes, topics, TF, lifecycle"],
-    ["Simulation Stack", "Gazebo, Isaac Sim, URDF"],
+    ["Simulation Stack", "MuJoCo, Gazebo, Isaac Sim, URDF"],
     ["Optimal Control", "PID, LQR, MPC"],
     ["Whole-Body Control", "QP, constraints, balance"],
     ["Locomotion & Manipulation", "Gait, grasping, contacts"],
   ]},
   { phase: "Phase 3 · Deployment", caption: "Đưa thuật toán từ mô phỏng lên humanoid thật", stages: [
     ["Reinforcement Learning", "Simulation RL, reward design"],
-    ["Sim-to-Real", "Randomization, adaptation"],
+    ["Sim-to-Real", "MuJoCo training, randomization, adaptation"],
     ["Hardware Interfaces", "Sensors, actuators, real-time control"],
     ["System Integration", "Perception-control synchronization"],
     ["Safety & Evaluation", "Testing, fallback, benchmarks"],

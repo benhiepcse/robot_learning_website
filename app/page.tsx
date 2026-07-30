@@ -343,6 +343,7 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
                 <div className="empty-icon">▷</div>
                 <div><span>TIẾP TỤC HỌC</span><h2>Chưa có bài học đang học</h2><p>Bài học gần nhất sẽ xuất hiện ở đây sau khi bạn bắt đầu nội dung đầu tiên trong Learning.</p></div>
                 <button onClick={() => setActiveNav("Learning")}>Mở Learning →</button>
+                <div className="continue-vision-art" aria-hidden="true" />
               </section>
 
               <section className="stat-grid honest-stats">

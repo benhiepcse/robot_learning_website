@@ -35,9 +35,11 @@ import {
   Info,
   LayoutDashboard,
   Layers3,
+  List,
   Lightbulb,
   Library,
   Map,
+  MoreVertical,
   Monitor,
   Moon,
   Calculator,
@@ -57,6 +59,7 @@ import {
   Palette,
   PencilLine,
   PersonStanding,
+  Plus,
   Radar,
   Repeat2,
   RadioTower,
@@ -64,6 +67,7 @@ import {
   Rocket,
   RotateCcw,
   Route,
+  Search,
   Scale,
   ScanSearch,
   ShieldCheck,
@@ -75,6 +79,7 @@ import {
   Save,
   Sun,
   Tags,
+  Trash2,
   TestTube2,
   UsersRound,
   Waves,
@@ -579,6 +584,146 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
   );
 }
 
+type RoboProject = {
+  id: string;
+  title: string;
+  description: string;
+  track: string;
+  technologies: string[];
+  difficulty: "Dễ" | "Trung bình" | "Khó" | "Rất khó";
+  progress: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const projectTracks = ["AI Perception", "3D Vision", "VLM & VLA", "Control", "Simulation", "Humanoid"];
+
+function ProjectsWorkspace() {
+  const [projects, setProjects] = useState<RoboProject[]>([]);
+  const [filter, setFilter] = useState("Tất cả");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [showCreate, setShowCreate] = useState(false);
+  const [draft, setDraft] = useState({ title: "", description: "", track: "AI Perception", technologies: "Python, OpenCV", difficulty: "Trung bình" as RoboProject["difficulty"] });
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("robolearn-projects");
+    if (stored) {
+      try { setProjects(JSON.parse(stored)); } catch { /* keep empty state */ }
+    }
+  }, []);
+
+  const persist = (next: RoboProject[]) => {
+    setProjects(next);
+    window.localStorage.setItem("robolearn-projects", JSON.stringify(next));
+  };
+
+  const visibleProjects = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    const result = projects.filter((project) => {
+      const matchesFilter = filter === "Tất cả" || (filter === "Hoàn thành" ? project.progress === 100 : project.track === filter);
+      const matchesQuery = !normalized || `${project.title} ${project.description} ${project.technologies.join(" ")}`.toLowerCase().includes(normalized);
+      return matchesFilter && matchesQuery;
+    });
+    return [...result].sort((a, b) => sort === "progress" ? b.progress - a.progress : sort === "name" ? a.title.localeCompare(b.title) : b.updatedAt.localeCompare(a.updatedAt));
+  }, [projects, filter, query, sort]);
+
+  const createProject = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!draft.title.trim()) return;
+    const now = new Date().toISOString();
+    const project: RoboProject = {
+      id: crypto.randomUUID(),
+      title: draft.title.trim(),
+      description: draft.description.trim(),
+      track: draft.track,
+      technologies: draft.technologies.split(",").map((item) => item.trim()).filter(Boolean),
+      difficulty: draft.difficulty,
+      progress: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+    persist([project, ...projects]);
+    setDraft({ title: "", description: "", track: "AI Perception", technologies: "Python, OpenCV", difficulty: "Trung bình" });
+    setShowCreate(false);
+  };
+
+  const updateProgress = (project: RoboProject, change: number) => {
+    persist(projects.map((item) => item.id === project.id ? { ...item, progress: Math.min(100, Math.max(0, item.progress + change)), updatedAt: new Date().toISOString() } : item));
+  };
+
+  const deleteProject = (project: RoboProject) => {
+    if (!window.confirm(`Xóa project "${project.title}"?`)) return;
+    persist(projects.filter((item) => item.id !== project.id));
+  };
+
+  const exportProjects = () => {
+    const blob = new Blob([JSON.stringify({ version: 1, projects }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "robolearn-projects.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importProjects = async (file?: File) => {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const incoming = Array.isArray(parsed) ? parsed : parsed.projects;
+      if (!Array.isArray(incoming)) throw new Error("Invalid project file");
+      persist(incoming);
+    } catch {
+      window.alert("File project không hợp lệ.");
+    }
+  };
+
+  const completed = projects.filter((project) => project.progress === 100).length;
+  const active = projects.filter((project) => project.progress > 0 && project.progress < 100).length;
+  const planned = projects.filter((project) => project.progress === 0).length;
+
+  return (
+    <section className="projects-workspace">
+      <header className="projects-header">
+        <div><span>BUILD · APPLY · SHIP</span><h1>Projects <em>Overview</em></h1><p>Biến kiến thức Robotics thành những hệ thống có thể chạy, đo lường và cải tiến.</p></div>
+        <div className="projects-header-actions"><label className="project-search"><Search size={17}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm kiếm project..." /></label><button className="new-project-button" onClick={() => setShowCreate(true)}><Plus size={18}/> New Project</button></div>
+      </header>
+
+      <div className="project-filters">
+        {["Tất cả", ...projectTracks, "Hoàn thành"].map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} key={item}>{item}</button>)}
+      </div>
+
+      <div className="projects-layout">
+        <main className="projects-main">
+          <div className="projects-toolbar"><h2>{filter === "Tất cả" ? "Tất cả project" : filter} <span>({visibleProjects.length})</span></h2><div><select value={sort} onChange={(e) => setSort(e.target.value)}><option value="newest">Mới cập nhật</option><option value="name">Tên A–Z</option><option value="progress">Tiến độ</option></select><button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><LayoutDashboard size={17}/></button><button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={17}/></button></div></div>
+          {visibleProjects.length === 0 ? (
+            <div className="projects-empty"><div><BriefcaseBusiness size={30}/></div><h2>{projects.length ? "Không tìm thấy project phù hợp" : "Chưa có project nào"}</h2><p>{projects.length ? "Thử đổi bộ lọc hoặc từ khóa tìm kiếm." : "Tạo project đầu tiên để bắt đầu áp dụng curriculum vào sản phẩm thực tế."}</p>{!projects.length && <button onClick={() => setShowCreate(true)}><Plus size={17}/> Tạo project đầu tiên</button>}</div>
+          ) : (
+            <div className={`project-collection ${view}`}>
+              {visibleProjects.map((project, index) => (
+                <article className="project-card" key={project.id}>
+                  <div className={`project-art art-${index % 6}`}><span>{project.track}</span><div className="project-nodes"><i/><i/><i/><i/></div></div>
+                  <div className="project-card-body"><header><h3>{project.title}</h3><button aria-label={`Xóa ${project.title}`} onClick={() => deleteProject(project)}><Trash2 size={16}/></button></header><p>{project.description || "Chưa có mô tả."}</p><div className="project-progress"><i><b style={{ width: `${project.progress}%` }}/></i><strong>{project.progress}%</strong></div><div className="project-tags">{project.technologies.slice(0, 4).map((tech) => <span key={tech}>{tech}</span>)}</div><footer><span>{project.difficulty}</span><small>{project.progress === 100 ? "Hoàn thành" : project.progress > 0 ? "Đang làm" : "Chưa bắt đầu"}</small><div><button onClick={() => updateProgress(project, -10)}>−10</button><button onClick={() => updateProgress(project, 10)}>+10</button></div></footer></div>
+                </article>
+              ))}
+            </div>
+          )}
+        </main>
+
+        <aside className="projects-side">
+          <section className="projects-side-card project-summary"><h3>Tổng quan dự án</h3><div className="project-donut" style={{ background: `conic-gradient(#36d57c 0 ${completed / Math.max(1, projects.length) * 100}%,#8154ed 0 ${(completed + active) / Math.max(1, projects.length) * 100}%,#283246 0)` }}><b>{projects.length}</b><span>Dự án</span></div><dl><div><dt><i className="green"/>Hoàn thành</dt><dd>{completed}</dd></div><div><dt><i className="purple"/>Đang làm</dt><dd>{active}</dd></div><div><dt><i/>Chưa bắt đầu</dt><dd>{planned}</dd></div></dl></section>
+          <section className="projects-side-card"><h3>Dự án gần đây</h3>{projects.length ? projects.slice(0, 3).map((project) => <div className="recent-project" key={project.id}><span>{project.title.slice(0,1)}</span><p><b>{project.title}</b><small>{project.track} · {project.progress}%</small></p></div>) : <div className="side-project-empty">Chưa có hoạt động project.</div>}</section>
+          <section className="projects-side-card project-tools"><h3>Công cụ nhanh</h3><button onClick={() => setShowCreate(true)}><Plus size={16}/> Tạo Project mới</button><label><span>⇧</span> Import Project<input type="file" accept=".json,application/json" onChange={(e) => importProjects(e.target.files?.[0])}/></label><button onClick={exportProjects} disabled={!projects.length}><span>⇩</span> Export Projects</button></section>
+        </aside>
+      </div>
+
+      {showCreate && <div className="project-modal-backdrop" onMouseDown={() => setShowCreate(false)}><form className="project-modal" onSubmit={createProject} onMouseDown={(e) => e.stopPropagation()}><header><div><span>NEW ROBOTICS PROJECT</span><h2>Tạo Project</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></header><label>Tên project<input autoFocus value={draft.title} onChange={(e) => setDraft({...draft,title:e.target.value})} placeholder="Ví dụ: Stereo Depth Pipeline" required /></label><label>Mô tả<textarea value={draft.description} onChange={(e) => setDraft({...draft,description:e.target.value})} placeholder="Mục tiêu và kết quả cần đạt..." /></label><div className="project-form-grid"><label>Track<select value={draft.track} onChange={(e) => setDraft({...draft,track:e.target.value})}>{projectTracks.map((track) => <option key={track}>{track}</option>)}</select></label><label>Độ khó<select value={draft.difficulty} onChange={(e) => setDraft({...draft,difficulty:e.target.value as RoboProject["difficulty"]})}><option>Dễ</option><option>Trung bình</option><option>Khó</option><option>Rất khó</option></select></label></div><label>Technologies<input value={draft.technologies} onChange={(e) => setDraft({...draft,technologies:e.target.value})} placeholder="Python, OpenCV, ROS2" /><small>Phân tách bằng dấu phẩy.</small></label><footer><button type="button" onClick={() => setShowCreate(false)}>Hủy</button><button type="submit"><Plus size={16}/> Tạo Project</button></footer></form></div>}
+    </section>
+  );
+}
+
 type RoboLearnSettings = {
   language: "vi" | "en";
   fontSize: number;
@@ -903,6 +1048,8 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
           <LearningWorkspace onOpenRoadmap={(track) => { setRoadmapTrack(track); setActiveNav("Roadmap"); }} />
         ) : activeNav === "Roadmap" ? (
           <RoadmapWorkspace initialTrack={roadmapTrack} />
+        ) : activeNav === "Projects" ? (
+          <ProjectsWorkspace />
         ) : activeNav === "Settings" ? (
           <SettingsWorkspace displayName={displayName} username={username} theme={theme} onThemeChange={setTheme} />
         ) : activeNav !== "Dashboard" ? (

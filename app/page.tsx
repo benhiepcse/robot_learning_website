@@ -7,19 +7,46 @@ import {
   ArrowRight,
   CircleGauge,
   CheckCircle2,
+  Activity,
+  Bot,
+  Box,
+  Boxes,
+  BrainCircuit,
+  Cable,
+  Camera,
+  Code2,
+  Cog,
+  Combine,
+  Cpu,
   Eye,
+  Footprints,
   Gamepad2,
   History,
+  Image,
   LayoutDashboard,
+  Layers3,
   Lightbulb,
   Library,
   Map,
-  RefreshCw,
+  MessageSquareText,
+  Move3d,
+  Navigation,
+  Network,
+  Orbit,
+  PersonStanding,
+  RadioTower,
+  Rocket,
+  Route,
+  ScanSearch,
+  ShieldCheck,
+  Sigma,
+  SlidersHorizontal,
   Sparkles,
   Target,
   Settings,
   Tags,
   UsersRound,
+  Waypoints,
 } from "lucide-react";
 
 function LoginScreen({ onLogin }: { onLogin: (username: string) => void }) {
@@ -289,6 +316,22 @@ const controlRoadmap = [
   ]},
 ];
 
+const perceptionModuleIcons = [
+  Code2, Image, Camera, Box, Layers3,
+  ScanSearch, PersonStanding, RadioTower, Navigation, BrainCircuit,
+  Boxes, MessageSquareText, Waypoints, Bot, Rocket,
+];
+
+const controlModuleIcons = [
+  Sigma, Orbit, Cog, Route, Activity,
+  Network, Box, SlidersHorizontal, Move3d, Footprints,
+  BrainCircuit, Cpu, Cable, Combine, ShieldCheck,
+];
+
+function getModuleIcon(track: "perception" | "control", index: number) {
+  return (track === "perception" ? perceptionModuleIcons : controlModuleIcons)[index];
+}
+
 function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "perception" | "control") => void }) {
   const [track, setTrack] = useState<"perception" | "control">("perception");
   const isPerception = track === "perception";
@@ -323,16 +366,17 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
 
       <div className="learning-v2-body">
         <section className="learning-modules">
-          <header><div><h2>Các Module</h2><span>3 phases · {modules.length} modules</span></div><p>Dữ liệu curriculum được đồng bộ trực tiếp với Roadmap</p></header>
+          <header><div><h2>Các Module</h2><span>3 phases · {modules.length} modules</span></div></header>
           <div className="learning-phase-list">
             {phases.map((phase, phaseIndex) => (
               <section className="learning-phase" key={phase.phase}>
-                <header><div><span>PHASE {phaseIndex + 1}</span><h3>{phase.phase.replace(/^Phase \d+ · /, "")}</h3></div><p>{phase.caption}</p><small>{phase.stages.length} modules</small></header>
+                <header><div><span>{phase.phase}</span></div><small>{phase.stages.length} modules</small></header>
                 <div className="learning-module-list">
                   {phase.stages.map((stage, stageIndex) => {
                     const moduleNumber = phaseIndex * 5 + stageIndex + 1;
+                    const ModuleIcon = getModuleIcon(track, moduleNumber - 1);
                     return <article key={stage[0]}>
-                      <div className="module-icon"><TrackIcon size={19}/></div>
+                      <div className="module-icon"><ModuleIcon size={19}/></div>
                       <div><span>MODULE {String(moduleNumber).padStart(2, "0")}</span><h3>{stage[0]}</h3><p>{stage[1]}</p></div>
                       <div className="module-data"><b>0 bài</b><span>Chưa xuất bản</span></div>
                       <div className="module-progress"><i /><b>0%</b></div>
@@ -347,9 +391,8 @@ function LearningWorkspace({ onOpenRoadmap }: { onOpenRoadmap: (track: "percepti
 
         <aside className="learning-v2-side">
           <section className="learning-v2-card"><header><CheckCircle2 size={18}/><h3>Nhiệm vụ hôm nay</h3><span className="empty-badge">0 nhiệm vụ</span></header><div className="learning-empty-state"><b>Chưa có nhiệm vụ</b><p>Nhiệm vụ sẽ xuất hiện khi bài học đầu tiên được phát hành.</p></div><button className="disabled-action" disabled>Chưa thể bắt đầu</button></section>
-          <section className="learning-v2-card"><header><Lightbulb size={18}/><h3>Gợi ý tiếp theo</h3></header><div className="learning-suggestion"><span>1</span><p><b>{modules[0].title}</b><small>{modules[0].description}</small></p></div><button onClick={() => onOpenRoadmap(track)}>Xem trong Roadmap <ArrowRight size={14}/></button></section>
+          <section className="learning-v2-card learning-next-card"><header><Lightbulb size={18}/><h3>Gợi ý tiếp theo</h3></header><div className="learning-suggestion"><span><TrackIcon size={18}/></span><p><small>MODULE 01</small><b>{modules[0].title}</b><small>{modules[0].description}</small></p></div><button onClick={() => onOpenRoadmap(track)}>Xem trong Roadmap <ArrowRight size={14}/></button></section>
           <section className="learning-v2-card"><header><History size={18}/><h3>Hoạt động gần đây</h3></header><div className="learning-empty-activity"><span>○</span><p><b>Chưa có hoạt động</b><small>Hoạt động học và XP sẽ được ghi nhận tại đây.</small></p></div></section>
-          <section className="learning-v2-card curriculum-sync"><header><RefreshCw size={18}/><h3>Curriculum Sync</h3></header><p><i />Learning và Roadmap đang dùng chung một nguồn dữ liệu.</p><dl><div><dt>Phases</dt><dd>3</dd></div><div><dt>Modules</dt><dd>15</dd></div></dl></section>
         </aside>
       </div>
     </section>
@@ -385,13 +428,14 @@ function RoadmapWorkspace({ initialTrack = "perception" }: { initialTrack?: "per
           <div className="roadmap-phases">
             {phases.map((phase, phaseIndex) => (
               <section className="roadmap-phase" key={phase.phase}>
-                <header><div><span>0{phaseIndex + 1}</span><h2>{phase.phase}</h2></div><p>{phase.caption}</p></header>
+                <header><div><span>0{phaseIndex + 1}</span><h2>{phase.phase}</h2></div></header>
                 <div className="roadmap-stage-row">
                   {phase.stages.map((stage, stageIndex) => {
                     const number = phaseIndex * 5 + stageIndex + 1;
+                    const ModuleIcon = getModuleIcon(track, number - 1);
                     return (
                       <article className="roadmap-stage" key={stage[0]}>
-                        <div className="stage-top"><span>{number}</span><small>PLANNED</small></div>
+                        <div className="stage-top"><span><ModuleIcon size={16}/></span><b>{String(number).padStart(2, "0")}</b><small>PLANNED</small></div>
                         <h3>{stage[0]}</h3>
                         <p>{stage[1]}</p>
                         <footer><i><b style={{ width: "0%" }} /></i><span>0%</span></footer>

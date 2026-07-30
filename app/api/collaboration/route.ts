@@ -124,6 +124,15 @@ export async function POST(request: Request) {
     ]);
     return NextResponse.json({ ok: true, ...(await snapshot(username, "general")) });
   }
+  if (action === "renameChannel") {
+    const channelId = String(body.channelId ?? "");
+    const name = String(body.name ?? "").trim().slice(0, 40);
+    const owned = await DB.prepare("SELECT created_by AS createdBy FROM collaboration_channels WHERE id = ?").bind(channelId).first<{ createdBy: string }>();
+    if (!name) return NextResponse.json({ ok: false, message: "Tên kênh không hợp lệ." }, { status: 400 });
+    if (!owned || (owned.createdBy !== username && username !== "levonghiahiep")) return NextResponse.json({ ok: false, message: "Bạn không có quyền đổi tên kênh này." }, { status: 403 });
+    await DB.prepare("UPDATE collaboration_channels SET name = ? WHERE id = ?").bind(name, channelId).run();
+    return NextResponse.json({ ok: true, ...(await snapshot(username, channelId)) });
+  }
   if (action === "togglePin") {
     await DB.prepare("UPDATE collaboration_messages SET pinned = CASE pinned WHEN 1 THEN 0 ELSE 1 END WHERE id = ?").bind(String(body.messageId ?? "")).run();
   } else if (action === "react") {

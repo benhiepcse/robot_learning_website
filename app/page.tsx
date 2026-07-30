@@ -61,6 +61,8 @@ import {
   Network,
   Orbit,
   Palette,
+  PanelLeftClose,
+  PanelLeftOpen,
   PencilLine,
   PersonStanding,
   Plus,
@@ -852,6 +854,7 @@ function CollaborationWorkspace({ username, displayName }: { username: string; d
   const [showNotifications, setShowNotifications] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [channelMenu, setChannelMenu] = useState<{ x: number; y: number; channel: CollaborationChannel } | null>(null);
 
   useEffect(() => {
     const storedProjects = localStorage.getItem("robolearn-projects");
@@ -962,6 +965,13 @@ function CollaborationWorkspace({ username, displayName }: { username: string; d
     } catch (error) { setNotice(error instanceof Error ? error.message : "Không thể xóa kênh."); }
   };
 
+  const renameChannel = async (target: CollaborationChannel) => {
+    const name = prompt("Tên mới của kênh", target.name)?.trim();
+    if (!name || name === target.name) return;
+    try { await collaborationAction("renameChannel", { channelId: target.id, name }); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "Không thể đổi tên kênh."); }
+  };
+
   const authorName = (author: string) => members.find((member) => member.username === author)?.name ?? collaborationMembers.find((member) => member.username === author)?.name ?? author;
   const initialsFor = (author: string) => collaborationMembers.find((member) => member.username === author)?.initials ?? author.slice(0, 2).toUpperCase();
 
@@ -971,7 +981,7 @@ function CollaborationWorkspace({ username, displayName }: { username: string; d
         <header><div><span>TEAM SPACE</span><h1>Collaboration</h1></div><button aria-label="Tạo kênh" onClick={() => setShowCreateChannel(true)}><Plus size={17}/></button></header>
         <section>
           <div className="collab-section-title"><b>Kênh</b><small>{channels.length}</small></div>
-          <nav>{channels.filter((item) => !item.id.startsWith("dm-")).map((item) => <button key={item.id} className={channel === item.id ? "active" : ""} onClick={() => { setChannel(item.id); setShowPins(false); setDetailView(null); }}><Hash size={16}/><span>{item.name}</span>{messages.some((message) => message.channel === item.id && message.author !== username) && <i/>}</button>)}</nav>
+          <nav>{channels.filter((item) => !item.id.startsWith("dm-")).map((item) => <button key={item.id} className={channel === item.id ? "active" : ""} onContextMenu={(event) => { event.preventDefault(); setChannelMenu({ x: event.clientX, y: event.clientY, channel: item }); }} onClick={() => { setChannel(item.id); setShowPins(false); setDetailView(null); }}><Hash size={16}/><span>{item.name}</span>{messages.some((message) => message.channel === item.id && message.author !== username) && <i/>}</button>)}</nav>
         </section>
         <section className="collab-direct">
           <div className="collab-section-title"><b>Tin nhắn trực tiếp</b><small>2</small></div>
@@ -1029,6 +1039,7 @@ function CollaborationWorkspace({ username, displayName }: { username: string; d
         <section className="collab-activity"><h3>Hoạt động mới</h3><p><Activity size={15}/> {messages.length ? `${messages.length} tin nhắn trong workspace` : "Chưa có hoạt động mới"}</p><p><UsersRound size={15}/> {members.filter((member) => member.online).length} thành viên trực tuyến</p></section>
       </aside>}
       {showCreateChannel && <div className="collab-modal-backdrop" onMouseDown={() => setShowCreateChannel(false)}><form className="collab-channel-modal" onSubmit={createChannel} onMouseDown={(event) => event.stopPropagation()}><header><div><span>NEW CHANNEL</span><h2>Tạo kênh thảo luận</h2></div><button type="button" onClick={() => setShowCreateChannel(false)}><X size={18}/></button></header><label>Tên kênh<input autoFocus required maxLength={40} value={newChannel.name} onChange={(event) => setNewChannel({ ...newChannel, name: event.target.value })} placeholder="Ví dụ: Humanoid Locomotion"/></label><label>Mô tả<textarea maxLength={160} value={newChannel.description} onChange={(event) => setNewChannel({ ...newChannel, description: event.target.value })} placeholder="Kênh này dùng để trao đổi nội dung gì?"/></label><footer><button type="button" onClick={() => setShowCreateChannel(false)}>Hủy</button><button type="submit" disabled={busy || !newChannel.name.trim()}><Plus size={15}/> Tạo kênh</button></footer></form></div>}
+      {channelMenu && <div className="channel-context-backdrop" onMouseDown={() => setChannelMenu(null)}><div className="channel-context-menu" style={{ left: Math.min(channelMenu.x, window.innerWidth - 270), top: Math.min(channelMenu.y, window.innerHeight - 470) }} onMouseDown={(event) => event.stopPropagation()}><header><Hash size={16}/><b>{channelMenu.channel.name}</b></header><button onClick={() => setChannelMenu(null)}>Mark as Read</button><hr/><button onClick={() => { navigator.clipboard.writeText(`${location.origin}/?channel=${channelMenu.channel.id}`); setChannelMenu(null); }}>Copy Link</button><button onClick={() => { navigator.clipboard.writeText(channelMenu.channel.id); setChannelMenu(null); }}>Copy Channel ID</button><button onClick={() => setChannelMenu(null)}>Pin Channel to Top</button><hr/><button onClick={() => setChannelMenu(null)}>Mute Channel</button><button onClick={() => setChannelMenu(null)}>Notification Settings</button><hr/><button onClick={() => { void renameChannel(channelMenu.channel); setChannelMenu(null); }}>Rename Channel</button>{!["general","ai-perception","control-simulation","project-discussion","ideas","dm-team"].includes(channelMenu.channel.id) && <button className="danger" onClick={() => { setChannel(channelMenu.channel.id); setChannelMenu(null); window.setTimeout(() => void deleteChannel(), 0); }}>Delete Channel</button>}</div></div>}
     </div>
   );
 }
@@ -1239,6 +1250,7 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [roadmapTrack, setRoadmapTrack] = useState<"perception" | "control">("perception");
   const [profileOpen, setProfileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState<DashboardTheme>("system");
   const [monthCursor, setMonthCursor] = useState(() => new Date());
   const [clockHour, setClockHour] = useState(() => new Date().getHours());
@@ -1301,8 +1313,9 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
   );
 
   return (
-    <main className={`robo-dashboard real-dashboard theme-${resolvedTheme}`}>
+    <main className={`robo-dashboard real-dashboard theme-${resolvedTheme} ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <aside className="dash-sidebar">
+        <button className="sidebar-collapse-button" onClick={() => setSidebarCollapsed((value) => !value)} title={sidebarCollapsed ? "Mở sidebar" : "Thu gọn sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}</button>
         <div className="dash-brand"><div className="dash-r">R</div><div><b>RoboLearn</b><small>Learn · Build · Innovate</small></div></div>
         <nav className="dash-nav" aria-label="Điều hướng chính">
           {premiumDashboardNav.map(({ Icon, label }) => (

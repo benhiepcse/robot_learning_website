@@ -12,13 +12,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: "RoboLearn — Master Robotics",
     description: "Learn AI Perception, Control and Simulation through code.",
-    images: [{ url: "/og.png", width: 1536, height: 1024, alt: "RoboLearn robotics learning platform" }],
+    images: [{ url: "/og-v2.png", width: 1536, height: 1024, alt: "RoboLearn robotics learning platform" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "RoboLearn — Master Robotics",
     description: "Learn AI Perception, Control and Simulation through code.",
-    images: ["/og.png"],
+    images: ["/og-v2.png"],
   },
 };
 

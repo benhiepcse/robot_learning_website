@@ -432,7 +432,7 @@ function getModuleIcon(track: "perception" | "control", index: number) {
   return (track === "perception" ? perceptionModuleIcons : controlModuleIcons)[index];
 }
 
-type LessonKind = "Coding" | "Control" | "Quiz" | "Simulation" | "ROS2";
+type LessonKind = "Coding" | "Robotics" | "Control" | "ROS2" | "Simulation" | "Quiz";
 type CurriculumModule = { track: "perception" | "control"; phase: string; title: string; description: string; moduleNumber: number };
 
 const chapterThemes = [
@@ -448,12 +448,13 @@ const lessonThemes = [
 ];
 
 function lessonKind(track: "perception" | "control", chapterIndex: number, lessonIndex: number): LessonKind {
-  const perceptionKinds: LessonKind[] = ["Coding", "Quiz", "Simulation", "ROS2", "Control"];
-  const controlKinds: LessonKind[] = ["Control", "Simulation", "Coding", "ROS2", "Quiz"];
-  return (track === "perception" ? perceptionKinds : controlKinds)[(chapterIndex + lessonIndex) % 5];
+  const perceptionKinds: LessonKind[] = ["Robotics", "Coding", "Quiz", "Simulation", "ROS2", "Control"];
+  const controlKinds: LessonKind[] = ["Robotics", "Control", "Simulation", "Coding", "ROS2", "Quiz"];
+  return (track === "perception" ? perceptionKinds : controlKinds)[(chapterIndex + lessonIndex) % 6];
 }
 
 function lessonWorkspaceName(kind: LessonKind) {
+  if (kind === "Robotics") return null;
   if (kind === "Control") return "Control Workspace";
   if (kind === "ROS2") return "ROS2 Workspace";
   if (kind === "Quiz") return "Quiz";
@@ -590,10 +591,10 @@ function ModuleLearningWorkspace({ module, onBack }: { module: CurriculumModule;
             <h3>2. Quy trình tiếp cận</h3>
             <ol><li>Xác định vấn đề và yêu cầu kỹ thuật.</li><li>Thiết kế mô hình hoặc thuật toán tối thiểu.</li><li>Kiểm thử bằng dữ liệu và điều kiện có thể lặp lại.</li><li>Đánh giá sai số trước khi tích hợp vào hệ thống lớn hơn.</li></ol>
             <p className="lesson-sample-note">Đây là nội dung mẫu để kiểm tra bố cục. Nội dung chuyên môn hoàn chỉnh sẽ thay thế phần này khi dữ liệu của chương được cung cấp.</p>
-            <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>
+            {workspaceName && <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>}
           </section> : <section className="lesson-example-content">
             <span>VÍ DỤ MINH HỌA</span><h3>Pipeline tối thiểu</h3><pre><code>{`input = load_sample()\nmodel = configure_${selected.kind.toLowerCase()}()\nresult = model.run(input)\nvalidate(result)`}</code></pre><p>Ví dụ chỉ minh họa cấu trúc luồng xử lý; chưa phải mã nguồn thực thi của bài học.</p>
-            <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>
+            {workspaceName && <button className="lesson-workspace-link" onClick={() => setOpenedWorkspace(workspaceName)}>{workspaceName} <ArrowRight size={17}/></button>}
           </section>}
         </main>
         <aside className="module-context-panel">

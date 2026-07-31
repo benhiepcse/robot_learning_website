@@ -218,7 +218,7 @@ const dashboardNav = [
 
 function LegacyRoboDashboard({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [activeNav, setActiveNav] = useState("Dashboard");
-  const displayName = username === "phanthethong" ? "Thế Thông" : "Ben Hiệp";
+  const displayName = username === "phanthethong" ? "Thế Thông" : username === "chaukhai" ? "Châu Khải" : "Ben Hiệp";
   const firstName = displayName.split(" ").at(-1);
   const heatCells = Array.from({ length: 84 }, (_, index) => (index * 7 + Math.floor(index / 6) * 3) % 5);
   const projects = [
@@ -1562,6 +1562,7 @@ const collaborationChannels = [
 const collaborationMembers = [
   { username: "levonghiahiep", name: "Ben Hiệp", initials: "BH" },
   { username: "phanthethong", name: "Thế Thông", initials: "TT" },
+  { username: "chaukhai", name: "Châu Khải", initials: "CK" },
 ];
 
 function CollaborationWorkspace({ username, displayName }: { username: string; displayName: string }) {
@@ -1986,7 +1987,7 @@ function RoboDashboard({ username, onLogout }: { username: string; onLogout: () 
   const [theme, setTheme] = useState<DashboardTheme>("system");
   const [monthCursor, setMonthCursor] = useState(() => new Date());
   const [clockHour, setClockHour] = useState(() => new Date().getHours());
-  const displayName = username === "phanthethong" ? "Thế Thông" : "Ben Hiệp";
+  const displayName = username === "phanthethong" ? "Thế Thông" : username === "chaukhai" ? "Châu Khải" : "Ben Hiệp";
   const initials = displayName.split(" ").map((part) => part[0]).join("");
   const totalXp = 0;
   const xpToday = 0;

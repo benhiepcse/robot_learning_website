@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 const ACCOUNTS: Record<string, string> = {
   levonghiahiep: "d4f9b102f84a3992ff4fa889884ac4be44cf4add54a033c5dcda79877931e917",
   phanthethong: "b90a32bd3f5f6a3a728639e4c4220a157bb86c1c2eaa533ea59b56b2b799a581",
+  chaukhai: "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5",
 };
 
 const encoder = new TextEncoder();

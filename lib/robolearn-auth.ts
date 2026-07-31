@@ -24,7 +24,7 @@ export async function requireRoboLearnUser(request: Request) {
     const payload = fromBase64Url(encodedPayload);
     const [username, expiry] = payload.split(".");
     const valid = signature === await sign(payload) && Number(expiry) > Math.floor(Date.now() / 1000);
-    return valid && ["levonghiahiep", "phanthethong"].includes(username) ? username : null;
+    return valid && ["levonghiahiep", "phanthethong", "chaukhai"].includes(username) ? username : null;
   } catch {
     return null;
   }

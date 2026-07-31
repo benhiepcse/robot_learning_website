@@ -5,6 +5,7 @@ import { requireRoboLearnUser } from "../../../lib/robolearn-auth";
 const displayNames: Record<string, string> = {
   levonghiahiep: "Ben Hiệp",
   phanthethong: "Thế Thông",
+  chaukhai: "Châu Khải",
 };
 
 function unauthorized() {
@@ -47,7 +48,7 @@ async function snapshot(username: string, selectedChannel?: string | null) {
     attachments: filesByMessage.get(String(message.id)) ?? [],
     reactions: reactionsByMessage.get(String(message.id)) ?? {},
   }));
-  const members = ["levonghiahiep", "phanthethong"].map((memberUsername) => {
+  const members = ["levonghiahiep", "phanthethong", "chaukhai"].map((memberUsername) => {
     const presence = (presenceResult.results as Array<Record<string, unknown>>).find((item) => item.username === memberUsername);
     const lastSeenAt = Number(presence?.lastSeenAt ?? 0);
     return {
